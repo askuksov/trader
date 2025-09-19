@@ -172,7 +172,7 @@ The project uses a flexible configuration system with two files:
 # Base configuration (.env)
 MYSQL_ROOT_PASSWORD=rootpassword
 MYSQL_DATABASE=trader
-MYSQL_USER=trader
+MYSQL_USER=dca_user
 MYSQL_PASSWORD=password
 
 # Backend
@@ -203,7 +203,7 @@ TELEGRAM_BOT_TOKEN=my-personal-bot-token
 
 ### Default Credentials
 - **Grafana**: admin/admin
-- **MySQL**: root/rootpassword, trader/password
+- **MySQL**: root/rootpassword, dca_user/password
 - **Redis**: password: redispassword
 - **Adminer**: Use MySQL credentials above
 
