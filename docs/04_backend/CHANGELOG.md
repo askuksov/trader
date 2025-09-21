@@ -1,23 +1,28 @@
 # Changelog - Backend
 
-All notable changes to the backend development will be documented in this file.
+All notable changes to the backend development documented in this file.
 
-## [Unreleased]
+## [1.1.0] - 2025-09-22
 
-### In Progress
-- User authentication system implementation
-- JWT token management
-- Role-based access control
-- API key management with encryption
-- DCA position management
-- Exchange integration (HitBTC)
+### Changed
+- Converted all documentation from Russian to English
+- Restructured documentation to follow established templates
+- Updated file naming convention (requirements.md, milestones.md)
+- Added proper task ID structure (TASK-BACKEND-NNN)
 
-### Planned
-- Take profit management
-- Risk management system
-- Notification system (Telegram, Email)
-- Performance monitoring
-- State recovery system
+### Added
+- Comprehensive task breakdown with time estimates
+- Technology stack specifications
+- Security implementation details
+- Performance targets and testing strategy
+- Service architecture with user context
+- Risk assessment and mitigation strategies
+
+### Documentation
+- Reorganized requirements.md with detailed acceptance criteria
+- Updated milestones.md with phase-based development approach
+- Added change history tracking to all documents
+- Enhanced API endpoint documentation with security context
 
 ## [1.0.0] - 2025-09-21
 
@@ -27,15 +32,9 @@ All notable changes to the backend development will be documented in this file.
 - Multi-tenant architecture design
 - Enterprise-grade security specifications
 
-### Documentation
-- Created detailed technical requirements
-- Defined Smart DCA strategy implementation
-- Established API endpoints specification
-- Planned authentication and authorization system
-
 ### Architecture
 - Go 1.25 backend framework selection
-- MySQL 8 database design
+- MySQL 8 database design with user isolation
 - Redis caching strategy
 - RESTful API design with OpenAPI
 - JWT authentication with RSA256
@@ -43,7 +42,36 @@ All notable changes to the backend development will be documented in this file.
 
 ### Security
 - Multi-user system with role-based access
-- Granular permissions system
+- Granular permissions system (resource + action)
 - API key encryption and management
-- User data isolation
-- Audit logging requirements
+- User data isolation requirements
+- Audit logging specifications
+
+### Trading Logic
+- Smart DCA strategy specification
+- "Never sell at a loss" principle implementation
+- Position management with user binding
+- Take profit calculation algorithms
+- Risk management requirements
+
+### Integration
+- HitBTC exchange API integration planning
+- WebSocket real-time data requirements
+- State recovery system specifications
+- Notification system (Telegram, Email) design
+
+## [Unreleased]
+
+### In Progress
+- TASK-BACKEND-001: Foundation and security system implementation
+- User authentication system development
+- JWT token management
+- Role-based access control setup
+
+### Planned
+- TASK-BACKEND-002: API key management with encryption
+- TASK-BACKEND-003: HitBTC exchange connector
+- TASK-BACKEND-004: Position management system
+- TASK-BACKEND-005: DCA Engine trading logic
+- TASK-BACKEND-006: State recovery system
+- TASK-BACKEND-007: Risk management and monitoring

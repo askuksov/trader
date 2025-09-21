@@ -1,13 +1,19 @@
 # Changelog - DevOps
 
-All notable changes to the DevOps configuration will be documented in this file.
+All notable changes to the DevOps configuration documented in this file.
 
-## [Unreleased]
+## [1.1.0] - 2025-09-22
 
-### Planned
-- Production deployment configuration
-- Kubernetes manifests
-- CI/CD pipeline setup
+### Changed
+- Converted all documentation from Russian to English
+- Restructured documentation to follow established templates
+- Updated file naming convention (requirements.md, milestones.md)
+- Added proper task ID structure (TASK-DEVOPS-NNN)
+
+### Documentation
+- Reorganized requirements.md with task breakdown
+- Updated milestones.md with service status matrix
+- Added change history tracking to all documents
 
 ## [1.0.0] - 2025-09-21
 
@@ -19,11 +25,6 @@ All notable changes to the DevOps configuration will be documented in this file.
 - Grafana dashboards configuration
 - Mailpit email testing setup
 - Adminer database management UI
-
-### Documentation
-- Created comprehensive DevOps requirements (01_REQUIREMENTS.md)
-- Defined development milestones (02_MILESTONES.md)
-- Established infrastructure standards
 
 ### Infrastructure
 - Development environment ready for immediate use
@@ -37,3 +38,17 @@ All notable changes to the DevOps configuration will be documented in this file.
 - Health check utilities
 - Backup and restore procedures
 - Environment validation tools
+
+### Configuration
+- Modern Docker Compose v2 syntax
+- Environment variable override system
+- Service dependency management
+- Persistent volume configuration
+
+## [Unreleased]
+
+### Planned
+- Production deployment configuration
+- Kubernetes manifests
+- CI/CD pipeline setup
+- Secret management integration

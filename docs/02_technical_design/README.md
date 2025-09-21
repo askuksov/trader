@@ -1,90 +1,90 @@
-# Техническое задание: Бот для спотовой торговли с Smart DCA стратегией (TDD)
+# Technical Specification: Spot Trading Bot with Smart DCA Strategy (TDD)
 
-> ⚠️ В этом документе описывается реализация Smart DCA стратегии: архитектура, схемы БД для позиций, алгоритмы DCA, механизмы восстановления состояния позиций, безопасности и мониторинга.
+> ⚠️ This document describes the implementation of Smart DCA strategy: architecture, database schemas for positions, DCA algorithms, position state recovery mechanisms, security and monitoring.
 
-## 1. Обзор проекта
-- Enterprise-grade бот для спотовой торговли с **Smart DCA стратегией**.
-- **Принцип "никогда не продавать в убыток"** - только LONG позиции.
-- Многоключевое управление API с привязкой к DCA позициям.
-- Критические системы безопасности и восстановления состояния позиций.
-- Нулевая потеря данных о позициях (state recovery).
+## 1. Project Overview
+- Enterprise-grade bot for spot trading with **Smart DCA strategy**.
+- **"Never sell at a loss" principle** - only LONG positions.
+- Multi-key API management with binding to DCA positions.
+- Critical security systems and position state recovery.
+- Zero data loss for positions (state recovery).
 
-## 2. Архитектура системы
-- Backend: Go v1.25 (новые системы: **Position State Manager**, **DCA Engine**, Key Manager, Trading Engine).
-- DB: MySQL 8 (позиции, DCA уровни, история операций, WAL).
-- Redis: кэш (котировки, состояние позиций, статистика).
-- API: RESTful (React клиент + Position Management + Emergency Stop + Key Management).
-- Биржи: HitBTC (MVP), Binance (следующая версия).
-- Безопасность: AES-256-GCM для ключей, WAL encryption, distributed locks для позиций.
+## 2. System Architecture
+- Backend: Go v1.25 (new systems: **Position State Manager**, **DCA Engine**, Key Manager, Trading Engine).
+- DB: MySQL 8 (positions, DCA levels, operation history, WAL).
+- Redis: cache (quotes, position states, statistics).
+- API: RESTful (React client + Position Management + Emergency Stop + Key Management).
+- Exchanges: HitBTC (MVP), Binance (next version).
+- Security: AES-256-GCM for keys, WAL encryption, distributed locks for positions.
 
-## 3. Критически важные системы для DCA
-- **Position State Recovery**: восстановление состояния всех активных DCA позиций после сбоя <30 сек.
-- **DCA Trigger Engine**: мониторинг цен и автоматическое срабатывание DCA уровней.
-- **Take Profit Manager**: управление частичными продажами только в профите.
-- **Emergency Position Management**: экстренная остановка всех позиций с сохранением состояния.
-- **Advanced Risk Management**: контроль экспозиции на ключ/пару, защита от переторговки.
-- **Enterprise Monitoring**: Prometheus, Grafana, мониторинг эффективности DCA стратегии.
+## 3. Critical Systems for DCA
+- **Position State Recovery**: restore state of all active DCA positions after failure <30 sec.
+- **DCA Trigger Engine**: price monitoring and automatic DCA level triggering.
+- **Take Profit Manager**: manage partial sales only in profit.
+- **Emergency Position Management**: emergency stop of all positions with state preservation.
+- **Advanced Risk Management**: exposure control per key/pair, overtrading protection.
+- **Enterprise Monitoring**: Prometheus, Grafana, DCA strategy efficiency monitoring.
 
-## 4. Функциональные требования для DCA
-- Управление DCA позициями (создание, мониторинг, завершение).
-- Автоматическое срабатывание DCA уровней при падении цены.
-- Частичные продажи только выше средней цены позиции.
-- Привязка позиций к API ключам с балансировкой нагрузки.
-- Восстановление состояния позиций после перезапуска.
-- Управление рисками: максимальная экспозиция на ключ, лимиты позиций.
+## 4. Functional Requirements for DCA
+- DCA position management (creation, monitoring, completion).
+- Automatic DCA level triggering on price drops.
+- Partial sales only above position average price.
+- Position binding to API keys with load balancing.
+- Position state recovery after restart.
+- Risk management: maximum exposure per key, position limits.
 
-## 5. API спецификация для DCA (расширенная)
+## 5. API Specification for DCA (Extended)
 
-### 5.1 Управление позициями
+### 5.1 Position Management
 ```http
-POST /api/v1/positions - создать новую DCA позицию
-GET /api/v1/positions - список активных позиций
-GET /api/v1/positions/{id} - детали позиции
-PUT /api/v1/positions/{id}/pause - приостановить позицию
-PUT /api/v1/positions/{id}/resume - возобновить позицию
-DELETE /api/v1/positions/{id} - экстренно закрыть позицию
+POST /api/v1/positions - create new DCA position
+GET /api/v1/positions - list active positions
+GET /api/v1/positions/{id} - position details
+PUT /api/v1/positions/{id}/pause - pause position
+PUT /api/v1/positions/{id}/resume - resume position
+DELETE /api/v1/positions/{id} - emergency close position
 ```
 
-### 5.2 Мониторинг DCA
+### 5.2 DCA Monitoring
 ```http
-GET /api/v1/positions/{id}/dca-levels - текущие DCA уровни
-GET /api/v1/positions/{id}/take-profits - уровни take profit
-GET /api/v1/positions/{id}/history - история операций по позиции
-GET /api/v1/analytics/dca-performance - аналитика эффективности DCA
+GET /api/v1/positions/{id}/dca-levels - current DCA levels
+GET /api/v1/positions/{id}/take-profits - take profit levels
+GET /api/v1/positions/{id}/history - position operation history
+GET /api/v1/analytics/dca-performance - DCA efficiency analytics
 ```
 
-### 5.3 Настройки стратегии
+### 5.3 Strategy Settings
 ```http
-GET /api/v1/strategy/dca-settings - текущие настройки DCA
-PUT /api/v1/strategy/dca-settings - обновить настройки DCA
-GET /api/v1/strategy/supported-pairs - поддерживаемые торговые пары
+GET /api/v1/strategy/dca-settings - current DCA settings
+PUT /api/v1/strategy/dca-settings - update DCA settings
+GET /api/v1/strategy/supported-pairs - supported trading pairs
 ```
 
-## 6. Схемы БД для DCA стратегии
+## 6. Database Schemas for DCA Strategy
 
-### 6.1 Основные таблицы позиций
+### 6.1 Main Position Tables
 ```sql
--- Основная таблица DCA позиций
+-- Main DCA positions table
 CREATE TABLE dca_positions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     trading_pair VARCHAR(20) NOT NULL,
     api_key_id BIGINT NOT NULL,
 
-    -- Состояние позиции
+    -- Position state
     status ENUM('active', 'completed', 'paused', 'emergency_stopped') DEFAULT 'active',
 
-    -- Финансовые данные
+    -- Financial data
     total_invested DECIMAL(18,8) DEFAULT 0,
     total_quantity DECIMAL(18,8) DEFAULT 0,
     average_price DECIMAL(18,8) DEFAULT 0,
     realized_profit DECIMAL(18,8) DEFAULT 0,
 
-    -- DCA параметры
+    -- DCA parameters
     initial_amount DECIMAL(18,8) NOT NULL,
     max_dca_levels INT DEFAULT 3,
     current_dca_level INT DEFAULT 0,
 
-    -- Временные метки
+    -- Timestamps
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
@@ -94,18 +94,18 @@ CREATE TABLE dca_positions (
     INDEX idx_api_key_active (api_key_id, status)
 );
 
--- DCA уровни для каждой позиции
+-- DCA levels for each position
 CREATE TABLE dca_levels (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     position_id BIGINT NOT NULL,
     level INT NOT NULL,
 
-    -- Параметры срабатывания
-    trigger_price_percent DECIMAL(5,2) NOT NULL, -- % от входной цены (-3%, -7%, -12%)
+    -- Trigger parameters
+    trigger_price_percent DECIMAL(5,2) NOT NULL, -- % from entry price (-3%, -7%, -12%)
     trigger_price DECIMAL(18,8) NOT NULL,
     amount DECIMAL(18,8) NOT NULL,
 
-    -- Состояние
+    -- State
     status ENUM('pending', 'triggered', 'filled', 'cancelled') DEFAULT 'pending',
     triggered_at TIMESTAMP NULL,
     filled_at TIMESTAMP NULL,
@@ -117,18 +117,18 @@ CREATE TABLE dca_levels (
     INDEX idx_trigger_price (trigger_price, status)
 );
 
--- Take Profit уровни
+-- Take Profit levels
 CREATE TABLE take_profit_levels (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     position_id BIGINT NOT NULL,
     level INT NOT NULL,
 
-    -- Параметры срабатывания
-    trigger_price_percent DECIMAL(5,2) NOT NULL, -- % от средней цены (+8%, +15%, +25%)
+    -- Trigger parameters
+    trigger_price_percent DECIMAL(5,2) NOT NULL, -- % from average price (+8%, +15%, +25%)
     trigger_price DECIMAL(18,8) NOT NULL,
-    quantity_percent DECIMAL(5,2) NOT NULL, -- % позиции для продажи (25%, 35%, 40%)
+    quantity_percent DECIMAL(5,2) NOT NULL, -- % of position to sell (25%, 35%, 40%)
 
-    -- Состояние
+    -- State
     status ENUM('pending', 'triggered', 'filled', 'cancelled') DEFAULT 'pending',
     triggered_at TIMESTAMP NULL,
     filled_at TIMESTAMP NULL,
@@ -141,23 +141,23 @@ CREATE TABLE take_profit_levels (
     INDEX idx_tp_trigger_price (trigger_price, status)
 );
 
--- История всех операций по позициям
+-- History of all position operations
 CREATE TABLE position_transactions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     position_id BIGINT NOT NULL,
     transaction_type ENUM('buy_initial', 'buy_dca', 'sell_partial', 'sell_complete') NOT NULL,
 
-    -- Детали транзакции
+    -- Transaction details
     price DECIMAL(18,8) NOT NULL,
     quantity DECIMAL(18,8) NOT NULL,
     amount DECIMAL(18,8) NOT NULL,
     fee DECIMAL(18,8) DEFAULT 0,
 
-    -- Связь с DCA/TP уровнями
+    -- Link to DCA/TP levels
     dca_level_id BIGINT NULL,
     take_profit_level_id BIGINT NULL,
 
-    -- Данные биржи
+    -- Exchange data
     exchange_order_id VARCHAR(100),
     exchange_trade_id VARCHAR(100),
 
@@ -171,15 +171,15 @@ CREATE TABLE position_transactions (
 );
 ```
 
-### 6.2 Дополнительные таблицы
+### 6.2 Additional Tables
 ```sql
--- Настройки DCA стратегии
+-- DCA strategy settings
 CREATE TABLE dca_strategy_settings (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     trading_pair VARCHAR(20),
 
-    -- DCA параметры
-    initial_amount_percent DECIMAL(5,2) DEFAULT 50.00, -- % от депозита
+    -- DCA parameters
+    initial_amount_percent DECIMAL(5,2) DEFAULT 50.00, -- % of deposit
     dca_level_1_percent DECIMAL(5,2) DEFAULT 3.00,     -- -3%
     dca_level_1_amount_percent DECIMAL(5,2) DEFAULT 15.00,
     dca_level_2_percent DECIMAL(5,2) DEFAULT 7.00,     -- -7%
@@ -187,7 +187,7 @@ CREATE TABLE dca_strategy_settings (
     dca_level_3_percent DECIMAL(5,2) DEFAULT 12.00,    -- -12%
     dca_level_3_amount_percent DECIMAL(5,2) DEFAULT 15.00,
 
-    -- Take Profit параметры
+    -- Take Profit parameters
     take_profit_1_percent DECIMAL(5,2) DEFAULT 8.00,   -- +8%
     take_profit_1_quantity_percent DECIMAL(5,2) DEFAULT 25.00,
     take_profit_2_percent DECIMAL(5,2) DEFAULT 15.00,  -- +15%
@@ -195,7 +195,7 @@ CREATE TABLE dca_strategy_settings (
     take_profit_3_percent DECIMAL(5,2) DEFAULT 25.00,  -- +25%
     take_profit_3_quantity_percent DECIMAL(5,2) DEFAULT 40.00,
 
-    -- Ограничения
+    -- Limits
     max_positions_per_key INT DEFAULT 3,
     max_amount_per_position DECIMAL(18,8) DEFAULT 500.00,
 
@@ -206,13 +206,13 @@ CREATE TABLE dca_strategy_settings (
     UNIQUE KEY unique_pair_settings (trading_pair)
 );
 
--- Мониторинг состояния позиций для восстановления
+-- Position state monitoring for recovery
 CREATE TABLE position_state_checkpoints (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     position_id BIGINT NOT NULL,
 
-    -- Снимок состояния
-    state_data JSON NOT NULL, -- Полное состояние позиции
+    -- State snapshot
+    state_data JSON NOT NULL, -- Full position state
     checkpoint_type ENUM('periodic', 'before_trade', 'after_trade', 'emergency') NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -222,18 +222,18 @@ CREATE TABLE position_state_checkpoints (
 );
 ```
 
-## 7. Алгоритмы DCA стратегии
+## 7. DCA Strategy Algorithms
 
-### 7.1 Алгоритм создания DCA позиции
+### 7.1 DCA Position Creation Algorithm
 ```go
 func CreateDCAPosition(pair string, depositAmount decimal.Decimal, keyID int64) {
-    // 1. Получить настройки стратегии для пары
+    // 1. Get strategy settings for pair
     settings := GetDCASettings(pair)
 
-    // 2. Рассчитать размеры ордеров
+    // 2. Calculate order sizes
     initialAmount := depositAmount.Mul(settings.InitialAmountPercent.Div(100))
 
-    // 3. Создать позицию в БД
+    // 3. Create position in DB
     position := &DCAPosition{
         TradingPair: pair,
         APIKeyID: keyID,
@@ -241,40 +241,40 @@ func CreateDCAPosition(pair string, depositAmount decimal.Decimal, keyID int64) 
         Status: "active",
     }
 
-    // 4. Разместить начальный ордер на покупку
+    // 4. Place initial buy order
     entryPrice := PlaceInitialBuyOrder(position, initialAmount)
     position.AveragePrice = entryPrice
     position.TotalInvested = initialAmount
 
-    // 5. Создать DCA уровни
+    // 5. Create DCA levels
     CreateDCALevels(position, settings)
 
-    // 6. Создать Take Profit уровни
+    // 6. Create Take Profit levels
     CreateTakeProfitLevels(position, settings)
 
-    // 7. Сохранить checkpoint состояния
+    // 7. Save state checkpoint
     SavePositionCheckpoint(position, "after_trade")
 }
 ```
 
-### 7.2 Алгоритм мониторинга DCA триггеров
+### 7.2 DCA Trigger Monitoring Algorithm
 ```go
 func MonitorDCATriggers() {
     for {
-        // 1. Получить все активные позиции
+        // 1. Get all active positions
         activePositions := GetActivePositions()
 
         for _, position := range activePositions {
             currentPrice := GetCurrentPrice(position.TradingPair)
 
-            // 2. Проверить DCA триггеры
+            // 2. Check DCA triggers
             CheckDCATriggers(position, currentPrice)
 
-            // 3. Проверить Take Profit триггеры
+            // 3. Check Take Profit triggers
             CheckTakeProfitTriggers(position, currentPrice)
         }
 
-        time.Sleep(1 * time.Second) // Проверка каждую секунду
+        time.Sleep(1 * time.Second) // Check every second
     }
 }
 
@@ -283,30 +283,30 @@ func CheckDCATriggers(position *DCAPosition, currentPrice decimal.Decimal) {
 
     for _, level := range pendingLevels {
         if currentPrice.LessThanOrEqual(level.TriggerPrice) {
-            // Триггер сработал - выполнить DCA покупку
+            // Trigger activated - execute DCA buy
             ExecuteDCABuy(position, level, currentPrice)
         }
     }
 }
 ```
 
-### 7.3 Алгоритм восстановления состояния позиций
+### 7.3 Position State Recovery Algorithm
 ```go
 func RecoverPositionStates() error {
-    // 1. Получить все активные позиции из БД
+    // 1. Get all active positions from DB
     activePositions := GetActivePositionsFromDB()
 
     for _, position := range activePositions {
-        // 2. Восстановить состояние с последнего checkpoint
+        // 2. Restore state from last checkpoint
         lastCheckpoint := GetLatestCheckpoint(position.ID)
 
-        // 3. Проверить статус ордеров на бирже
+        // 3. Check order status on exchange
         SyncOrderStatesWithExchange(position)
 
-        // 4. Пересчитать среднюю цену и уровни
+        // 4. Recalculate average price and levels
         RecalculatePositionMetrics(position)
 
-        // 5. Возобновить мониторинг
+        // 5. Resume monitoring
         StartMonitoring(position)
 
         log.Info("Position recovered", "id", position.ID, "pair", position.TradingPair)
@@ -316,455 +316,144 @@ func RecoverPositionStates() error {
 }
 ```
 
-## 8. Конфигурация DCA стратегии (пример YAML)
+## 8. DCA Strategy Configuration (YAML Example)
 ```yaml
 dca_strategy:
   default_settings:
-    initial_amount_percent: 50.0    # 50% депозита на первую покупку
+    initial_amount_percent: 50.0    # 50% of deposit for first buy
     dca_levels:
-      - trigger_percent: -3.0       # Первый DCA при -3%
-        amount_percent: 15.0        # 15% депозита
-      - trigger_percent: -7.0       # Второй DCA при -7%
-        amount_percent: 20.0        # 20% депозита
-      - trigger_percent: -12.0      # Третий DCA при -12%
-        amount_percent: 15.0        # 15% депозита
+      - trigger_percent: -3.0       # First DCA at -3%
+        amount_percent: 15.0        # 15% of deposit
+      - trigger_percent: -7.0       # Second DCA at -7%
+        amount_percent: 20.0        # 20% of deposit
+      - trigger_percent: -12.0      # Third DCA at -12%
+        amount_percent: 15.0        # 15% of deposit
 
     take_profit_levels:
-      - trigger_percent: 8.0        # Первый TP при +8%
-        quantity_percent: 25.0      # Продать 25% позиции
-      - trigger_percent: 15.0       # Второй TP при +15%
-        quantity_percent: 35.0      # Продать 35% позиции
-      - trigger_percent: 25.0       # Третий TP при +25%
-        quantity_percent: 40.0      # Продать 40% позиции
+      - trigger_percent: 8.0        # First TP at +8%
+        quantity_percent: 25.0      # Sell 25% of position
+      - trigger_percent: 15.0       # Second TP at +15%
+        quantity_percent: 35.0      # Sell 35% of position
+      - trigger_percent: 25.0       # Third TP at +25%
+        quantity_percent: 40.0      # Sell 40% of position
 
   risk_management:
-    max_positions_per_key: 3        # Максимум 3 позиции на ключ
-    max_amount_per_position: 500    # Максимум $500 на позицию
-    emergency_stop_loss_percent: -30 # Экстренная остановка при -30%
+    max_positions_per_key: 3        # Maximum 3 positions per key
+    max_amount_per_position: 500    # Maximum $500 per position
+    emergency_stop_loss_percent: -30 # Emergency stop at -30%
 
   monitoring:
-    price_check_interval: 1s        # Проверка цен каждую секунду
-    checkpoint_interval: 60s        # Checkpoint каждую минуту
-    health_check_interval: 30s      # Проверка здоровья системы
+    price_check_interval: 1s        # Check prices every second
+    checkpoint_interval: 60s        # Checkpoint every minute
+    health_check_interval: 30s      # System health check
 ```
 
-## 9. Диаграммы архитектуры системы (PlantUML)
+## 9. System Architecture Diagrams
 
-### 9.1 Общая архитектура системы кампаний
-```plantuml
-@startuml
-package "Campaign Trading System" {
-  [API Server]
-  [Campaign Manager]
-  [Strategy Orchestrator]
-  [Position Manager]
-  [Grid Engine]
-  [Short Position Manager]
-  [DCA Engine]
-  [Market Analyzer]
-  [Risk Manager]
-  [Stop Controller]
-  [State Recovery]
-  [Exchange Connector]
-}
+### 9.1 Campaign Trading System Overview
+![Campaign Trading System](diagrams/diagram_9.1.svg)
 
-[API Server] --> [Campaign Manager]
-[Campaign Manager] --> [Strategy Orchestrator]
-[Strategy Orchestrator] --> [Position Manager]
-[Strategy Orchestrator] --> [Market Analyzer]
+The overall system architecture showing the campaign trading system with components including Campaign Manager, Strategy Orchestrator, Position Manager, and various engines (DCA Engine, Grid Engine, Short Position Manager). The system connects to MySQL for persistent data storage and Redis for caching, with clear separation of concerns between different system components.
 
-[Position Manager] --> [DCA Engine]
-[Position Manager] --> [Grid Engine]
-[Position Manager] --> [Short Position Manager]
+### 9.2 Campaign Accumulation Lifecycle
+![Campaign Lifecycle](diagrams/diagram_9.2.svg)
 
-[DCA Engine] --> [Exchange Connector]
-[Grid Engine] --> [Exchange Connector]
-[Short Position Manager] --> [Exchange Connector]
+This diagram illustrates the complete lifecycle of an accumulation campaign, from creation through execution to completion. It shows the decision points for strategy switching, stop conditions, and goal achievement. The workflow includes market analysis, strategy execution (Smart DCA, Grid Trading, Short DCA, Bear Market DCA), progress monitoring, and adaptive strategy management.
 
-[Risk Manager] --> [Position Manager]
-[Stop Controller] --> [Campaign Manager]
-[State Recovery] --> [Campaign Manager]
+### 9.3 Strategy Selection and Switching Algorithm
+![Strategy Selection](diagrams/diagram_9.3.svg)
 
-' === MySQL Block ===
-database "MySQL" as DB
+Details the intelligent algorithm for selecting and switching between trading strategies based on market conditions. The system analyzes current market conditions, evaluates strategy performance, and dynamically adjusts strategy allocation. It includes decision points for market condition changes and reallocation needs, ensuring optimal strategy mix for current market environment.
 
-package "MySQL Tables" {
-  [accumulation_campaigns]
-  [campaign_strategies]
-  [trading_positions]
-  [grid_levels]
-  [dca_levels]
-  [take_profit_levels]
-  [trading_strategies]
-  [stop_controls]
-}
+### 9.4 Grid Trading Algorithm
+![Grid Trading](diagrams/diagram_9.4.svg)
 
-[Campaign Manager] --> DB
-[Strategy Orchestrator] --> DB
-[Position Manager] --> DB
-[State Recovery] --> DB
+Comprehensive flow of the Grid Trading algorithm showing initialization, parameter calculation, order placement, and execution monitoring. The algorithm handles both buy and sell order executions, with corresponding order placement and profit calculation. It includes adaptive grid adjustment based on market condition changes and continuous monitoring of grid strategy effectiveness.
 
-' === Redis Block ===
-node "Redis" as Cache <<cache>>
+### 9.5 Stop Control System
+![Stop Controls](diagrams/diagram_9.5.svg)
 
-package "Redis Data" {
-  [market_data]
-  [campaign_states]
-  [position_cache]
-  [strategy_cache]
-}
+Detailed sequence diagram of the stop control system showing different types of stops (Graceful, Emergency, Scheduled) and their implementation across system components. The diagram illustrates the interaction between User, StopController, CampaignManager, StrategyOrchestrator, PositionManager, and ExchangeConnector during stop procedures, ensuring safe and controlled termination of trading activities.
 
-[Market Analyzer] --> Cache
-[Position Manager] --> Cache
-@enduml
+### 9.6 State Recovery Process
+![State Recovery](diagrams/diagram_9.6.svg)
+
+Shows the comprehensive state recovery process that ensures system resilience and zero data loss. The process includes loading active campaigns, strategies, and positions, validating data consistency, syncing with exchange APIs, and resuming all system operations. This critical system component ensures business continuity after any system restart or failure.
+
+### 9.7 Data Model Entity Relationships
+![Data Model](diagrams/diagram_9.7.svg)
+
+Entity-Relationship diagram showing the complete data model for the campaign trading system. It illustrates relationships between accumulation campaigns, trading strategies, campaign strategy allocations, trading positions, grid levels, DCA levels, and stop controls. The model supports flexible strategy assignment, position management, and comprehensive tracking of all trading activities.
+
+## 10. Configuration Management
+
+### 10.1 Environment Configuration
+```yaml
+# Production Environment
+database:
+  host: ${DB_HOST}
+  port: 3306
+  name: trader_prod
+  encryption: AES-256-GCM
+
+redis:
+  host: ${REDIS_HOST}
+  port: 6379
+  cluster_mode: true
+
+exchanges:
+  hitbtc:
+    endpoint: "https://api.hitbtc.com"
+    rate_limits:
+      orders_per_second: 10
+      requests_per_minute: 1000
+
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+  grafana:
+    enabled: true
+    dashboards: ["dca_performance", "position_health", "risk_metrics"]
 ```
 
-### 9.2 Жизненный цикл кампании накопления
-```plantuml
-@startuml
-start
-:Create Campaign;
-:Define Accumulation Goals;
-:Select & Configure Strategies;
-:Allocate Budget;
-
-:Start Campaign;
-:Initialize Strategy Monitoring;
-
-repeat
-  :Analyze Market Conditions;
-
-  fork
-    :Execute Smart DCA;
-  fork again
-    :Execute Grid Trading;
-  fork again
-    :Execute Short DCA;
-  fork again
-    :Execute Bear Market DCA;
-  end fork
-
-  :Update Campaign Progress;
-  :Check Goal Achievement;
-
-  if (Strategy Switch Needed?) then (yes)
-    :Adjust Strategy Allocation;
-    :Switch/Enable/Disable Strategies;
-  endif
-
-  if (Stop Condition Met?) then (yes)
-    :Execute Stop Procedure;
-    note right: Emergency, Graceful, or Scheduled
-    stop
-  endif
-
-  if (Goals Achieved?) then (yes)
-    :Complete Campaign;
-    :Generate Final Report;
-    stop
-  endif
-
-  :Wait for Next Cycle;
-repeat while (Campaign Active?)
-
-stop
-@enduml
+### 10.2 Security Configuration
+```yaml
+security:
+  api_key_encryption: AES-256-GCM
+  wal_encryption: true
+  position_locks: distributed
+  session_timeout: 3600
+  
+  rate_limiting:
+    api_requests_per_minute: 1000
+    position_operations_per_second: 5
+    
+  access_control:
+    admin_roles: ["admin", "risk_manager"]
+    trader_roles: ["trader", "analyst"]
+    readonly_roles: ["viewer"]
 ```
 
-### 9.3 Алгоритм выбора и переключения стратегий
-```plantuml
-@startuml
-start
-:Campaign Started;
-:Load Initial Strategy Allocation;
+## 11. Performance Requirements
 
-repeat
-  :Analyze Current Market Conditions;
-  note right
-    - Price vs MA(50), MA(200)
-    - RSI levels
-    - Volatility metrics
-    - Volume analysis
-  end note
+### 11.1 System Performance
+- Position state recovery: <30 seconds
+- Price monitoring latency: <100ms
+- Order execution latency: <500ms
+- Database query response: <50ms
+- API response time: <200ms
 
-  :Evaluate Current Strategy Performance;
-  note right
-    - ROI per strategy
-    - Goal achievement rate
-    - Risk metrics
-    - Execution efficiency
-  end note
+### 11.2 Scalability Targets
+- Concurrent positions: 10,000+
+- API keys supported: 1,000+
+- Trading pairs: 500+
+- Historical data retention: 5 years
+- System uptime: 99.9%
 
-  if (Market Conditions Changed?) then (yes)
-    :Identify Optimal Strategy Mix;
-
-    if (Reallocation Needed?) then (yes)
-      :Calculate New Allocation;
-      :Prepare Strategy Transition;
-
-      fork
-        :Gracefully Reduce Underperforming Strategies;
-      fork again
-        :Increase Allocation to Better Strategies;
-      fork again
-        :Activate New Strategies if Needed;
-      end fork
-
-      :Update Campaign Configuration;
-      :Log Strategy Changes;
-      :Send Notifications;
-    endif
-  endif
-
-  :Update Strategy States;
-  :Wait for Next Analysis Cycle;
-repeat while (Campaign Active?)
-
-stop
-@enduml
-```
-
-### 9.4 Grid Trading алгоритм
-```plantuml
-@startuml
-start
-:Initialize Grid Strategy;
-:Analyze Price Range & Volatility;
-:Calculate Grid Parameters;
-note right
-  - Grid count
-  - Price spacing
-  - Order sizes
-  - Upper/lower bounds
-end note
-
-:Place Initial Grid Orders;
-
-repeat
-  :Monitor Order Executions;
-
-  if (Buy Order Filled?) then (yes)
-    :Place Corresponding Sell Order Above;
-    :Update Base Asset Accumulation;
-    :Log Transaction;
-  endif
-
-  if (Sell Order Filled?) then (yes)
-    :Place Corresponding Buy Order Below;
-    :Update Quote Asset Accumulation;
-    :Calculate Profit;
-    :Log Transaction;
-  endif
-
-  if (Market Conditions Changed?) then (yes)
-    :Evaluate Grid Adjustment;
-
-    if (Adjustment Needed?) then (yes)
-      :Cancel Existing Orders;
-      :Recalculate Grid Parameters;
-      :Place New Grid Orders;
-    endif
-  endif
-
-  :Update Grid State;
-  :Check Campaign Goals;
-
-repeat while (Grid Strategy Active?)
-
-stop
-@enduml
-```
-
-### 9.5 Система остановок (Stop Controls)
-```plantuml
-@startuml
-actor User
-participant StopController
-participant CampaignManager
-participant StrategyOrchestrator
-participant PositionManager
-participant ExchangeConnector
-database StopControlsDB
-
-User -> StopController: Initiate Stop Request
-note right
-  Scope: Campaign/Strategy/Key/Pair
-  Type: Graceful/Emergency/Scheduled
-end note
-
-StopController -> StopControlsDB: Create Stop Control Record
-StopController -> CampaignManager: Identify Affected Entities
-
-alt Graceful Stop
-  CampaignManager -> StrategyOrchestrator: Pause New Position Creation
-  StrategyOrchestrator -> PositionManager: Complete Current Operations
-  PositionManager -> ExchangeConnector: Allow Current Orders to Fill
-  PositionManager -> PositionManager: Close Positions at Take Profit Only
-
-else Emergency Stop
-  CampaignManager -> StrategyOrchestrator: Immediate Strategy Halt
-  StrategyOrchestrator -> PositionManager: Cancel All Pending Orders
-  PositionManager -> ExchangeConnector: Cancel Orders on Exchange
-  PositionManager -> ExchangeConnector: Close Positions at Market Price
-
-else Scheduled Stop
-  StopController -> StopController: Wait for Scheduled Time
-  StopController -> CampaignManager: Execute Graceful Stop
-end
-
-CampaignManager -> StopControlsDB: Update Stop Status
-StopController -> User: Confirm Stop Completion
-@enduml
-```
-
-### 9.6 State Recovery процесс
-```plantuml
-@startuml
-start
-:System Restart Detected;
-:Load Recovery Manager;
-
-fork
-  :Load Active Campaigns;
-  :Validate Campaign States;
-fork again
-  :Load Active Strategies;
-  :Validate Strategy Assignments;
-fork again
-  :Load All Positions;
-  :Validate Position States;
-fork again
-  :Load Active Stop Controls;
-  :Validate Stop Scopes;
-end fork
-
-:Cross-Reference Data Consistency;
-
-if (Data Inconsistencies Found?) then (yes)
-  :Execute Data Repair Procedures;
-  :Log Inconsistency Details;
-endif
-
-:Sync with Exchange APIs;
-note right
-  - Verify order statuses
-  - Check account balances
-  - Validate position states
-end note
-
-if (Exchange Sync Issues?) then (yes)
-  :Execute Exchange Reconciliation;
-  :Update Local States;
-endif
-
-fork
-  :Resume Campaign Monitoring;
-fork again
-  :Resume Strategy Orchestration;
-fork again
-  :Resume Position Management;
-fork again
-  :Resume Market Analysis;
-fork again
-  :Resume Risk Monitoring;
-end fork
-
-:Create Recovery Checkpoint;
-:Generate Recovery Report;
-:Send Recovery Notifications;
-
-stop
-@enduml
-```
-
-### 9.7 Модель данных (Entity Relationship)
-```plantuml
-@startuml
-entity "accumulation_campaigns" as campaigns {
-  * id : BIGINT
-  --
-  * name : VARCHAR(100)
-  * campaign_type : ENUM
-  * trading_pair : VARCHAR(20)
-  * total_budget : DECIMAL(18,8)
-  * status : ENUM
-  accumulation_goals : JSON
-  strategy_allocation : JSON
-  created_at : TIMESTAMP
-}
-
-entity "trading_strategies" as strategies {
-  * id : BIGINT
-  --
-  * name : VARCHAR(100)
-  * strategy_type : ENUM
-  * version : VARCHAR(20)
-  * is_active : BOOLEAN
-  base_config : JSON
-  supported_position_types : JSON
-}
-
-entity "campaign_strategies" as camp_strat {
-  * id : BIGINT
-  --
-  * campaign_id : BIGINT
-  * strategy_id : BIGINT
-  * allocation_percent : DECIMAL(5,2)
-  * is_enabled : BOOLEAN
-  activation_conditions : JSON
-}
-
-entity "trading_positions" as positions {
-  * id : BIGINT
-  --
-  * campaign_id : BIGINT
-  * strategy_id : BIGINT
-  * position_type : ENUM
-  * trading_pair : VARCHAR(20)
-  * status : ENUM
-  total_invested : DECIMAL(18,8)
-  average_price : DECIMAL(18,8)
-  grid_config : JSON
-}
-
-entity "grid_levels" as grid {
-  * id : BIGINT
-  --
-  * position_id : BIGINT
-  * level_index : INT
-  * price : DECIMAL(18,8)
-  * side : ENUM
-  * status : ENUM
-}
-
-entity "dca_levels" as dca {
-  * id : BIGINT
-  --
-  * position_id : BIGINT
-  * level : INT
-  * trigger_price : DECIMAL(18,8)
-  * side : ENUM
-  * status : ENUM
-}
-
-entity "stop_controls" as stops {
-  * id : BIGINT
-  --
-  * stop_scope : ENUM
-  * campaign_id : BIGINT
-  * strategy_id : BIGINT
-  * stop_type : ENUM
-  * status : ENUM
-}
-
-campaigns ||--o{ camp_strat
-strategies ||--o{ camp_strat
-campaigns ||--o{ positions
-strategies ||--o{ positions
-positions ||--o{ grid
-positions ||--o{ dca
-campaigns ||--o{ stops
-strategies ||--o{ stops
-positions ||--o{ stops
-@enduml
-```
+### 11.3 Risk Management Thresholds
+- Maximum position exposure per key: $10,000
+- Daily loss limit per key: 5%
+- Maximum concurrent DCA levels: 5
+- Position monitoring frequency: 1 second
+- Emergency stop execution: <1 second
