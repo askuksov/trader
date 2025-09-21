@@ -22,16 +22,16 @@ docs/
 
 ## Document Inventory
 
-| Path                                    | Type         | Status      | Last updated |
-|----------------------------------------|--------------|-------------|--------------|
-| 01_product_requirements/readme.md     | requirements | done        | 2025-09-21   |
-| 02_technical_design/readme.md          | design       | done        | 2025-09-21   |
-| 03_devops/01_requirements.md           | requirements | done        | 2025-09-21   |
-| 03_devops/02_milestones.md             | milestones   | done        | 2025-09-21   |
-| 04_backend/01_requirements.md          | requirements | done        | 2025-09-21   |
-| 04_backend/02_milestones.md            | milestones   | in-progress | 2025-09-21   |
-| templates/requirements.md              | template     | done        | 2025-09-22   |
-| templates/milestones.md                | template     | done        | 2025-09-22   |
+| Path                              | Type         | Status      | Last updated |
+|-----------------------------------|--------------|-------------|--------------|
+| 01_product_requirements/README.md | requirements | done        | 2025-09-21   |
+| 02_technical_design/README.md     | design       | done        | 2025-09-21   |
+| 03_devops/01_REQUIREMENTS.md      | requirements | done        | 2025-09-21   |
+| 03_devops/02_MILESTONES.md        | milestones   | done        | 2025-09-21   |
+| 04_backend/01_REQUIREMENTS.md     | requirements | done        | 2025-09-21   |
+| 04_backend/02_MILESTONES.md       | milestones   | in-progress | 2025-09-21   |
+| templates/requirements.md         | template     | done        | 2025-09-22   |
+| templates/milestones.md           | template     | done        | 2025-09-22   |
 
 ## Section Status
 
