@@ -17,7 +17,7 @@ up: ## Start all services with docker compose
 		exit 1; \
 	fi
 	cd deployments && docker compose -f docker-compose.dev.yml up -d
-	@echo "✅ All services started!"
+	@echo " ✅ All services started!"
 	@echo ""
 	@echo "📊 Service URLs:"
 	@echo "  Frontend:      http://localhost:3000"
@@ -33,7 +33,7 @@ up: ## Start all services with docker compose
 down: ## Stop all services
 	@echo "🛑 Stopping all services..."
 	cd deployments && docker compose -f docker-compose.dev.yml down
-	@echo "✅ All services stopped!"
+	@echo " ✅ All services stopped!"
 
 restart: ## Restart all services
 	@echo "🔄 Restarting all services..."
