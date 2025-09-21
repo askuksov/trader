@@ -28,7 +28,12 @@ Development of enterprise-grade trading bot with Smart DCA (Dollar Cost Averagin
 
 ## Subtasks
 
-- [x] TASK-BACKEND-001 — Foundation and security system setup
+- [x] TASK-BACKEND-001 — Foundation and security system setup (split into subtasks)
+  - [ ] TASK-BACKEND-001.1 — Project foundation and database layer
+  - [ ] TASK-BACKEND-001.2 — Security system and JWT authentication
+  - [ ] TASK-BACKEND-001.3 — Console commands and user management
+  - [ ] TASK-BACKEND-001.4 — HTTP API and middleware
+  - [ ] TASK-BACKEND-001.5 — Testing and documentation
 - [ ] TASK-BACKEND-002 — API keys management and encryption
 - [ ] TASK-BACKEND-003 — HitBTC exchange connector
 - [ ] TASK-BACKEND-004 — Position management system

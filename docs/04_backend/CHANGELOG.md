@@ -62,6 +62,17 @@ All notable changes to the backend development documented in this file.
 
 ## [Unreleased]
 
+### Added
+- TASK-BACKEND-001.md: Foundation and security system setup (main task)
+- TASK-BACKEND-001.1.md: Project foundation and database layer subtask
+- TASK-BACKEND-001.2.md: Security system and JWT authentication subtask
+- TASK-BACKEND-001.3.md: Console commands and user management subtask
+- TASK-BACKEND-001.4.md: HTTP API and middleware subtask
+- TASK-BACKEND-001.5.md: Testing and documentation subtask
+- Console-based user management with interactive password prompts
+- Security improvements: no password flags in command history
+- Multi-tenant security architecture with data isolation
+
 ### In Progress
 - TASK-BACKEND-001: Foundation and security system implementation
 - User authentication system development

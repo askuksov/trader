@@ -35,7 +35,7 @@ Develop enterprise-grade trading bot with Smart DCA strategy featuring multi-ten
 
 ## Development Phases
 
-### Phase 1: Foundation and Security (Weeks 1-3) - 88 hours
+### Phase 1: Foundation and Security
 - Project initialization and structure
 - Configuration system with Viper
 - Structured logging with Zerolog
@@ -49,28 +49,28 @@ Develop enterprise-grade trading bot with Smart DCA strategy featuring multi-ten
 - REST API for authentication and user management
 - Basic data initialization
 
-### Phase 2: API Key Management (Week 3-4) - 32 hours
+### Phase 2: API Key Management
 - API key database schema with user binding
 - AES-256-GCM encryption system
 - CRUD operations for API keys with permission checks
 - REST API for key management with authorization
 - API key testing functionality
 
-### Phase 3: Exchange Integration (Week 4-5) - 36 hours
+### Phase 3: Exchange Integration
 - HitBTC HTTP client with authentication
 - Market data retrieval methods
 - Order management functionality
 - Account balance operations
 - WebSocket real-time data integration
 
-### Phase 4: Position Management (Week 5-6) - 52 hours
+### Phase 4: Position Management
 - Extended database schema for trading pairs and positions
 - Position repository layer with user filtering
 - Position state manager with thread safety
 - Position service with permission checks
 - REST API for position management with authorization
 
-### Phase 5: DCA Trading Logic (Week 6-8) - 56 hours
+### Phase 5: DCA Trading Logic
 - DCA strategy configuration system
 - Strategy management API
 - DCA level calculator
@@ -80,14 +80,14 @@ Develop enterprise-grade trading bot with Smart DCA strategy featuring multi-ten
 - Take profit executor
 - Position completion logic
 
-### Phase 6: State Recovery (Week 8-9) - 38 hours
+### Phase 6: State Recovery
 - Position checkpoint system
 - State recovery manager
 - Exchange state synchronization
 - Data consistency validator
 - Recovery testing framework
 
-### Phase 7: Risk Management (Week 9-10) - 48 hours
+### Phase 7: Risk Management
 - Risk management service
 - Emergency stop system
 - Health monitoring
