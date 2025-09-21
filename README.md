@@ -358,12 +358,12 @@ make prod-up
 
 Documentation is organized by topic in the `docs/` folder:
 
-- [Product Requirements](docs/01_Product_Requirements/requirements.md)
-- [Technical Design](docs/02_Technical_Design/technical_design.md)
-- [DevOps Setup](docs/03_DevOps_MVP/requirements.md)
-- [DevOps Setup Complete](docs/03_DevOps_MVP/setup_complete.md)
-- [Golang Requirements](docs/04_Golang_MVP/requirements.md)
-- [Development Milestones](docs/05_Development_Milestones/milestones.md)
+- [Product Requirements](docs/01_product_requirements/requirements.md)
+- [Technical Design](docs/02_technical_design/technical_design.md)
+- [DevOps Setup](docs/03_devops/requirements.md)
+- [DevOps Setup Complete](docs/03_devops/setup_complete.md)
+- [Golang Requirements](docs/04_backend/requirements.md)
+- [Development Milestones](docs/04_backend/milestones.md)
 
 ## 🆘 Troubleshooting
 
