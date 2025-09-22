@@ -1,20 +1,20 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS exchanges (
+CREATE TABLE IF NOT EXISTS permissions (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    code VARCHAR(20) NOT NULL UNIQUE,
-    is_active BOOLEAN DEFAULT TRUE,
-    api_url VARCHAR(255),
-    website_url VARCHAR(255),
+    resource VARCHAR(50) NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
-    INDEX idx_exchanges_active_deleted (is_active, deleted_at)
+    
+    UNIQUE KEY unique_resource_action (resource, action),
+    INDEX idx_permissions_resource (resource),
+    INDEX idx_permissions_action (action)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS exchanges;
+DROP TABLE IF EXISTS permissions;
 -- +goose StatementEnd

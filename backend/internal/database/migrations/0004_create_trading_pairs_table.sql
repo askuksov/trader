@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS trading_pairs (
     CONSTRAINT fk_trading_pairs_quote_coin_id 
         FOREIGN KEY (quote_coin_id) REFERENCES coins(id) 
         ON UPDATE CASCADE ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- +goose StatementEnd
 
 -- +goose Down

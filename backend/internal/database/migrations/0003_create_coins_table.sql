@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS coins (
     deleted_at TIMESTAMP NULL,
     INDEX idx_coins_deleted_at (deleted_at),
     INDEX idx_coins_active_sort (is_active, sort_order)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- +goose StatementEnd
 
 -- +goose Down

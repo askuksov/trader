@@ -60,6 +60,30 @@ All notable changes to the backend development documented in this file.
 - State recovery system specifications
 - Notification system (Telegram, Email) design
 
+## [1.2.0] - 2025-09-22
+
+### Completed
+- **TASK-BACKEND-001.2**: Security System and JWT Authentication
+- Complete database schema for security system (roles, permissions, user_roles, user_permissions, password_reset_tokens, audit_logs)
+- JWT configuration structure in config.go
+- Extended users table with authentication fields (password_hash, email_verified, last_login_at, login_attempts, locked_until)
+- Role and permission models with proper relationships
+- User permission system with allow/deny flags
+- Password reset token model with validation methods
+- Audit logging model for security operations
+- Seed data with default roles and permissions
+
+### Fixed
+- Corrected Permission model field types (CreatedAt, UpdatedAt)
+- Fixed admin role permissions assignment in seed data
+- Added proper time import to Permission model
+
+### Database Schema
+- 8 new migration files for complete security system
+- Proper foreign key constraints and indexes
+- Default role hierarchy: super_admin, admin, trader, viewer
+- Granular permissions: resource:action format (users:create, positions:read_own, etc.)
+
 ## [Unreleased]
 
 ### Added

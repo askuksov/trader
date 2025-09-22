@@ -13,6 +13,8 @@ type Config struct {
 	Database DatabaseConfig
 	Redis    RedisConfig
 	Logging  LoggingConfig
+	JWT      JWTConfig
+	Security SecurityConfig
 	Env      string
 }
 
@@ -45,6 +47,22 @@ type LoggingConfig struct {
 	Format string
 }
 
+type JWTConfig struct {
+	AccessSecret     string
+	RefreshSecret    string
+	AccessDuration   time.Duration
+	RefreshDuration  time.Duration
+	Issuer           string
+}
+
+type SecurityConfig struct {
+	BcryptCost           int
+	PasswordResetExpiry  time.Duration
+	MaxLoginAttempts     int
+	LockoutDuration      time.Duration
+	RequireEmailVerify   bool
+}
+
 func Load() *Config {
 	config := &Config{
 		Server: ServerConfig{
@@ -72,6 +90,20 @@ func Load() *Config {
 			Level:  getEnv("LOG_LEVEL", "info"),
 			Format: getEnv("LOG_FORMAT", "json"),
 		},
+		JWT: JWTConfig{
+			AccessSecret:    getEnv("JWT_ACCESS_SECRET", "your-super-secret-access-key-change-in-production"),
+			RefreshSecret:   getEnv("JWT_REFRESH_SECRET", "your-super-secret-refresh-key-change-in-production"),
+			AccessDuration:  getEnvAsDuration("JWT_ACCESS_DURATION", 15*time.Minute),
+			RefreshDuration: getEnvAsDuration("JWT_REFRESH_DURATION", 7*24*time.Hour), // 7 days
+			Issuer:          getEnv("JWT_ISSUER", "trading-bot"),
+		},
+		Security: SecurityConfig{
+			BcryptCost:          getEnvAsInt("BCRYPT_COST", 12),
+			PasswordResetExpiry: getEnvAsDuration("PASSWORD_RESET_EXPIRY", time.Hour),
+			MaxLoginAttempts:    getEnvAsInt("MAX_LOGIN_ATTEMPTS", 5),
+			LockoutDuration:     getEnvAsDuration("LOCKOUT_DURATION", 30*time.Minute),
+			RequireEmailVerify:  getEnvAsBool("REQUIRE_EMAIL_VERIFY", false),
+		},
 		Env: getEnv("ENV", "development"),
 	}
 
@@ -94,6 +126,14 @@ func getEnvAsInt(key string, defaultValue int) int {
 	return defaultValue
 }
 
+func getEnvAsBool(key string, defaultValue bool) bool {
+	valueStr := getEnv(key, "")
+	if value, err := strconv.ParseBool(valueStr); err == nil {
+		return value
+	}
+	return defaultValue
+}
+
 func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 	valueStr := getEnv(key, "")
 	if value, err := time.ParseDuration(valueStr); err == nil {
@@ -111,5 +151,14 @@ func validateConfig(config *Config) {
 	}
 	if config.Server.Port == "" {
 		log.Fatal().Msg("Server port is required")
+	}
+	if config.JWT.AccessSecret == "your-super-secret-access-key-change-in-production" && config.Env == "production" {
+		log.Fatal().Msg("JWT access secret must be changed in production")
+	}
+	if config.JWT.RefreshSecret == "your-super-secret-refresh-key-change-in-production" && config.Env == "production" {
+		log.Fatal().Msg("JWT refresh secret must be changed in production")
+	}
+	if config.Security.BcryptCost < 10 || config.Security.BcryptCost > 15 {
+		log.Fatal().Msg("Bcrypt cost should be between 10 and 15")
 	}
 }
