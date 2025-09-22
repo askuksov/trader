@@ -93,16 +93,35 @@ reset: ## Full reset (clean + up)
 	$(MAKE) clean
 	$(MAKE) up
 
-# Database commands (will be updated when Goose is integrated)
-db-migrate: ## Run database migrations (Goose integration pending)
-	@echo "📊 Database migrations will be handled by Goose tool..."
-	@echo "⚠️  This command will be implemented by the backend developer"
-	@echo "💡 For now, initial schema is loaded via init-db.sql"
+# Database commands
+db-migrate: ## Run database migrations
+	@echo "📊 Running database migrations..."
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations up
+	@echo "✅ Database migrations completed!"
 
-db-seed: ## Seed database with test data (Goose integration pending)
-	@echo "🌱 Database seeding will be handled by Goose tool..."
-	@echo "⚠️  This command will be implemented by the backend developer"
-	@echo "💡 Basic seed data is loaded via init-db.sql"
+db-migrate-down: ## Rollback last database migration
+	@echo "📊 Rolling back database migration..."
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations down
+	@echo "✅ Database migration rolled back!"
+
+db-migrate-status: ## Check database migration status
+	@echo "📊 Checking migration status..."
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations status
+
+db-migrate-create: ## Create new database migration
+	@echo "📊 Creating new migration..."
+	@read -p "Enter migration name: " name; \
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations create "$name" sql
+
+db-migrate-reset: ## Reset all database migrations (careful!)
+	@echo "⚠️  Resetting all database migrations..."
+	@read -p "Are you sure? This will drop all tables! (y/N): " confirm; \
+	if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations reset; \
+		echo "✅ Database reset completed!"; \
+	else \
+		echo "❌ Database reset cancelled."; \
+	fi
 
 db-backup: ## Create database backup
 	@echo "💾 Creating database backup..."

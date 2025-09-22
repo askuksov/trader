@@ -2,24 +2,40 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"trader/internal/config"
+	"trader/internal/database"
+	"trader/pkg/logger"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	l "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/rs/zerolog"
-	zlog "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	// Load configuration
+	cfg := config.Load()
+
 	// Initialize logger
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zlog.Logger = zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	logger.Init(cfg.Logging.Level, cfg.Logging.Format)
+
+	// Initialize database
+	db, err := database.NewDatabase(cfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to connect to database")
+	}
+	defer db.Close()
+
+	// Run auto migrations
+	if err := db.AutoMigrate(); err != nil {
+		log.Fatal().Err(err).Msg("Failed to run auto migrations")
+	}
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
@@ -29,10 +45,10 @@ func main() {
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
 			}
-			
-			zlog.Error().Err(err).Int("status", code).Str("path", c.Path()).Msg("Request error")
+
+			log.Error().Err(err).Int("status", code).Str("path", c.Path()).Msg("Request error")
 			return c.Status(code).JSON(fiber.Map{
-				"error": true,
+				"error":   true,
 				"message": err.Error(),
 			})
 		},
@@ -45,28 +61,35 @@ func main() {
 		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders: "Origin,Content-Type,Accept,Authorization",
 	}))
-	app.Use(logger.New(logger.Config{
+	app.Use(l.New(l.Config{
 		Format: "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path} | ${error}\n",
 	}))
 
 	// Routes
 	api := app.Group("/api/v1")
-	
+
 	// Health check endpoint
 	api.Get("/health", func(c *fiber.Ctx) error {
+		// Check database health
+		if err := db.HealthCheck(); err != nil {
+			return c.Status(503).JSON(fiber.Map{
+				"status":  "error",
+				"message": "Database health check failed",
+				"error":   err.Error(),
+			})
+		}
+
 		return c.JSON(fiber.Map{
 			"status":    "ok",
 			"service":   "trading-bot-api",
 			"version":   "1.0.0",
 			"timestamp": time.Now().Unix(),
+			"database":  "healthy",
 		})
 	})
 
 	// Authentication routes
 	auth := api.Group("/auth")
-	auth.Post("/register", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"message": "Register endpoint - not implemented yet"})
-	})
 	auth.Post("/login", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"message": "Login endpoint - not implemented yet"})
 	})
@@ -105,14 +128,11 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "8080"
-		}
-		
-		zlog.Info().Str("port", port).Msg("Starting server")
-		if err := app.Listen(":" + port); err != nil {
-			zlog.Fatal().Err(err).Msg("Failed to start server")
+		addr := cfg.Server.Host + ":" + cfg.Server.Port
+
+		log.Info().Str("address", addr).Msg("Starting server")
+		if err := app.Listen(addr); err != nil {
+			log.Fatal().Err(err).Msg("Failed to start server")
 		}
 	}()
 
@@ -121,14 +141,14 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	<-c
-	zlog.Info().Msg("Shutting down server...")
+	log.Info().Msg("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	if err := app.ShutdownWithContext(ctx); err != nil {
-		zlog.Fatal().Err(err).Msg("Server forced to shutdown")
+		log.Fatal().Err(err).Msg("Server forced to shutdown")
 	}
 
-	zlog.Info().Msg("Server exited")
+	log.Info().Msg("Server exited")
 }
