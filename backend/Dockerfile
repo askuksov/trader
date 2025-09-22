@@ -18,6 +18,9 @@ RUN go install github.com/air-verse/air@latest
 # Copy source code
 COPY . .
 
+# Build the migrate tool
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/migrate ./cmd/migrate
+
 # Expose port
 EXPOSE 8080
 

@@ -43,7 +43,7 @@ func NewDatabase(cfg *config.Config) (*Database, error) {
 }
 
 func newMySQLConnection(cfg config.DatabaseConfig) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&multiStatements=true",
 		cfg.Username,
 		cfg.Password,
 		cfg.Host,

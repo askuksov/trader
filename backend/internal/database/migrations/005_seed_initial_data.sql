@@ -8,7 +8,9 @@ ON DUPLICATE KEY UPDATE
     is_active = VALUES(is_active),
     api_url = VALUES(api_url),
     website_url = VALUES(website_url);
+-- +goose StatementEnd
 
+-- +goose StatementBegin
 -- Insert coins
 INSERT INTO coins (symbol, name, is_active, sort_order) VALUES
 ('BTC', 'Bitcoin', TRUE, 1),

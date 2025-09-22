@@ -94,31 +94,31 @@ reset: ## Full reset (clean + up)
 	$(MAKE) up
 
 # Database commands
-db-migrate: ## Run database migrations
+db-migrate-up: ## Run database migrations
 	@echo "📊 Running database migrations..."
-	cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations up
-	@echo "✅ Database migrations completed!"
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend migrate -dir=internal/database/migrations up
+	@echo " ✅ Database migrations completed!"
 
 db-migrate-down: ## Rollback last database migration
 	@echo "📊 Rolling back database migration..."
-	cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations down
-	@echo "✅ Database migration rolled back!"
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend migrate -dir=internal/database/migrations down
+	@echo " ✅ Database migration rolled back!"
 
 db-migrate-status: ## Check database migration status
 	@echo "📊 Checking migration status..."
-	cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations status
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend migrate -dir=internal/database/migrations status
 
 db-migrate-create: ## Create new database migration
 	@echo "📊 Creating new migration..."
 	@read -p "Enter migration name: " name; \
-	cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations create "$name" sql
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend migrate -dir=internal/database/migrations create "$name" sql
 
 db-migrate-reset: ## Reset all database migrations (careful!)
 	@echo "⚠️  Resetting all database migrations..."
 	@read -p "Are you sure? This will drop all tables! (y/N): " confirm; \
 	if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then \
-		cd deployments && docker compose -f docker-compose.dev.yml exec backend ./migrate -dir=internal/database/migrations reset; \
-		echo "✅ Database reset completed!"; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend migrate -dir=internal/database/migrations reset; \
+		echo " ✅ Database reset completed!"; \
 	else \
 		echo "❌ Database reset cancelled."; \
 	fi
