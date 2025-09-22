@@ -40,7 +40,7 @@ Implement console commands for database migrations and user management with inte
 
 ### Migration Command
 ```bash
-# Run migrations
+# Run migrations (includes seed data in migration 200_)
 ./migrate up
 
 # Rollback migrations  
@@ -48,9 +48,6 @@ Implement console commands for database migrations and user management with inte
 
 # Reset database (down all + up all)
 ./migrate reset
-
-# Seed initial data (roles, permissions)
-./migrate seed
 
 # Show migration status
 ./migrate status
@@ -68,29 +65,29 @@ Implement console commands for database migrations and user management with inte
 
 # Show user details
 ./user show --email=user@example.com
-./user show --id=uuid
+./user show --id=123
 
 # Update user
-./user update --id=uuid [--email=newemail@example.com] [--first-name=Jane] [--active=false]
+./user update --id=123 [--email=newemail@example.com] [--first-name=Jane] [--active=false]
 
 # Activate/deactivate user
-./user activate --id=uuid
-./user deactivate --id=uuid
+./user activate --id=123
+./user deactivate --id=123
 
 # Delete user (soft delete)
-./user delete --id=uuid
+./user delete --id=123
 ```
 
 ### Role Management Commands
 ```bash
 # Assign role to user
-./user set-role --id=uuid --role=admin
+./user set-role --id=123 --role=admin
 
 # Remove role from user  
-./user remove-role --id=uuid --role=admin
+./user remove-role --id=123 --role=admin
 
 # List user roles
-./user roles --id=uuid
+./user roles --id=123
 
 # List all roles
 ./user list-roles
@@ -99,16 +96,16 @@ Implement console commands for database migrations and user management with inte
 ### Permission Management Commands
 ```bash
 # Grant direct permission to user
-./user grant-permission --id=uuid --permission=positions:create --allow=true
+./user grant-permission --id=123 --permission=positions:create --allow=true
 
 # Deny permission to user
-./user grant-permission --id=uuid --permission=positions:create --allow=false
+./user grant-permission --id=123 --permission=positions:create --allow=false
 
 # Remove direct permission
-./user revoke-permission --id=uuid --permission=positions:create
+./user revoke-permission --id=123 --permission=positions:create
 
 # List user permissions (effective permissions)
-./user permissions --id=uuid
+./user permissions --id=123
 
 # List all available permissions
 ./user list-permissions
@@ -117,15 +114,15 @@ Implement console commands for database migrations and user management with inte
 ### Password Management Commands
 ```bash
 # Reset user password (interactive prompt)
-./user reset-password --id=uuid
+./user reset-password --id=123
 # New password: (interactive prompt, hidden input)
 # Confirm password: (interactive prompt, hidden input)
 
 # Force password change on next login
-./user force-password-change --id=uuid
+./user force-password-change --id=123
 
 # Unlock user account
-./user unlock --id=uuid
+./user unlock --id=123
 ```
 
 ## Implementation Details
@@ -174,7 +171,7 @@ func main() {
         Short: "Database migration tool",
     }
     
-    rootCmd.AddCommand(upCmd, downCmd, resetCmd, seedCmd, statusCmd)
+    rootCmd.AddCommand(upCmd, downCmd, resetCmd, statusCmd)
     rootCmd.Execute()
 }
 

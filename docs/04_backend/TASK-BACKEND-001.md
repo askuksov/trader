@@ -87,7 +87,7 @@ docker/               # Docker configurations
 ```sql
 -- Users table
 users:
-- id (uuid, primary key)
+- id (bigint unsigned, primary key, auto_increment)
 - email (varchar, unique, not null)
 - password_hash (varchar, not null)
 - first_name (varchar)
@@ -103,7 +103,7 @@ users:
 
 -- Roles table
 roles:
-- id (uuid, primary key)
+- id (bigint unsigned, primary key, auto_increment)
 - name (varchar, unique, not null)
 - description (text)
 - is_active (boolean, default true)
@@ -112,7 +112,7 @@ roles:
 
 -- Permissions table
 permissions:
-- id (uuid, primary key)
+- id (bigint unsigned, primary key, auto_increment)
 - resource (varchar, not null) -- e.g., "api_keys", "positions"
 - action (varchar, not null)   -- e.g., "create", "read", "update", "delete"
 - description (text)
@@ -121,28 +121,28 @@ permissions:
 
 -- Role permissions (many-to-many)
 role_permissions:
-- role_id (uuid, foreign key)
-- permission_id (uuid, foreign key)
+- role_id (bigint unsigned, foreign key)
+- permission_id (bigint unsigned, foreign key)
 - created_at (timestamp)
 
 -- User permissions (direct permissions with allow/deny)
 user_permissions:
-- user_id (uuid, foreign key)
-- permission_id (uuid, foreign key)
+- user_id (bigint unsigned, foreign key)
+- permission_id (bigint unsigned, foreign key)
 - allow (boolean, not null) -- true = allow, false = deny
 - created_at (timestamp)
 
 -- User roles (many-to-many)
 user_roles:
-- user_id (uuid, foreign key)
-- role_id (uuid, foreign key)
+- user_id (bigint unsigned, foreign key)
+- role_id (bigint unsigned, foreign key)
 - assigned_at (timestamp)
-- assigned_by (uuid, foreign key users)
+- assigned_by (bigint unsigned, foreign key users)
 
 -- Password reset tokens
 password_reset_tokens:
-- id (uuid, primary key)
-- user_id (uuid, foreign key)
+- id (bigint unsigned, primary key, auto_increment)
+- user_id (bigint unsigned, foreign key)
 - token (varchar, unique, not null)
 - expires_at (timestamp, not null)
 - used_at (timestamp)
@@ -153,8 +153,8 @@ password_reset_tokens:
 ```sql
 -- Audit log
 audit_logs:
-- id (uuid, primary key)
-- user_id (uuid, foreign key, nullable)
+- id (bigint unsigned, primary key, auto_increment)
+- user_id (bigint unsigned, foreign key, nullable)
 - action (varchar, not null)
 - resource (varchar, not null)
 - resource_id (varchar)
@@ -199,25 +199,25 @@ system: health_check, metrics
 ./user list [--role=trader] [--active=true]
 
 # Update user
-./user update --id=uuid --email=newemail@example.com [--active=false]
+./user update --id=123 --email=newemail@example.com [--active=false]
 
 # Set user role
-./user set-role --id=uuid --role=admin
+./user set-role --id=123 --role=admin
 
 # Reset password (password prompted interactively)
-./user reset-password --id=uuid
+./user reset-password --id=123
 # New password: (interactive prompt, hidden input)
 
 # Add permission
-./user add-permission --id=uuid --permission=positions:create --allow=true
+./user add-permission --id=123 --permission=positions:create --allow=true
 
 # Remove permission
-./user remove-permission --id=uuid --permission=positions:create
+./user remove-permission --id=123 --permission=positions:create
 ```
 
-#### Migration Command (Enhanced)
+#### Migration Command
 ```bash
-# Run migrations
+# Run migrations (includes seed data in migration files)
 ./migrate up
 
 # Rollback migrations
@@ -226,8 +226,8 @@ system: health_check, metrics
 # Reset database
 ./migrate reset
 
-# Seed initial data
-./migrate seed
+# Show migration status
+./migrate status
 ```
 
 ### Security Implementation

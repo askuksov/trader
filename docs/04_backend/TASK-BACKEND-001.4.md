@@ -12,13 +12,6 @@ Implement HTTP server with Fiber framework, authentication and authorization mid
 
 ## Scope
 
-### HTTP Server
-- Fiber v2 server setup
-- Request/response middleware
-- Error handling middleware
-- CORS configuration
-- Rate limiting
-
 ### Authentication Middleware
 - JWT token validation
 - Token blacklist checking
@@ -154,7 +147,7 @@ func AuthMiddleware(authService services.AuthService) fiber.Handler {
 ```go
 func RequirePermission(permission string) fiber.Handler {
     return func(c *fiber.Ctx) error {
-        userID := c.Locals("user_id").(uuid.UUID)
+        userID := c.Locals("user_id").(uint64)
         permissions := c.Locals("permissions").([]string)
         
         // Check if user has required permission
@@ -171,7 +164,7 @@ func RequirePermission(permission string) fiber.Handler {
 
 func RequireResourceAccess(resourceParam string) fiber.Handler {
     return func(c *fiber.Ctx) error {
-        userID := c.Locals("user_id").(uuid.UUID)
+        userID := c.Locals("user_id").(uint64)
         resourceID := c.Params(resourceParam)
         
         // Check if user can access this resource

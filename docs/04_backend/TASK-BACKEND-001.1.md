@@ -24,11 +24,14 @@ internal/
 ├── database/
 │   ├── database.go       # Database connections and health checks
 │   └── migrations/       # Goose SQL migration files
-│       ├── 001_create_users_table.sql
-│       ├── 002_create_exchanges_table.sql
-│       ├── 003_create_coins_table.sql
-│       ├── 004_create_trading_pairs_table.sql
-│       └── 005_seed_initial_data.sql
+│       ├── 100_create_users_table.sql
+│       ├── 101_create_exchanges_table.sql
+│       ├── 102_create_coins_table.sql
+│       ├── 103_create_trading_pairs_table.sql
+│       ├── 104_create_roles_table.sql
+│       ├── 105_create_permissions_table.sql
+│       ├── 106_create_security_tables.sql
+│       └── 200_seed_initial_data.sql
 ├── models/              # Database models
 │   ├── user.go
 │   ├── exchange.go
@@ -99,40 +102,52 @@ LOG_FORMAT=json
 
 ### Database Models
 ```go
-// Models using gorm.Model (ID, timestamps, soft deletes)
+// Models using unsigned big int autoincrement IDs
 type User struct {
-    gorm.Model
-    Email     string `gorm:"uniqueIndex;not null"`
-    FirstName string
-    LastName  string
-    IsActive  bool `gorm:"default:true"`
+    ID        uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
+    Email     string    `gorm:"uniqueIndex;not null" json:"email"`
+    FirstName string    `json:"first_name"`
+    LastName  string    `json:"last_name"`
+    IsActive  bool      `gorm:"default:true" json:"is_active"`
+    CreatedAt time.Time `json:"created_at"`
+    UpdatedAt time.Time `json:"updated_at"`
+    DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 type Exchange struct {
-    gorm.Model
-    Name        string `gorm:"uniqueIndex;not null"`
-    Code        string `gorm:"uniqueIndex;not null"`
-    IsActive    bool   `gorm:"default:true"`
-    APIEndpoint string
+    ID          uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
+    Name        string    `gorm:"uniqueIndex;not null" json:"name"`
+    Code        string    `gorm:"uniqueIndex;not null" json:"code"`
+    IsActive    bool      `gorm:"default:true" json:"is_active"`
+    APIEndpoint string    `json:"api_endpoint"`
+    CreatedAt   time.Time `json:"created_at"`
+    UpdatedAt   time.Time `json:"updated_at"`
+    DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 type Coin struct {
-    gorm.Model
-    Name     string `gorm:"uniqueIndex;not null"`
-    Symbol   string `gorm:"uniqueIndex;not null;size:10"`
-    IsActive bool   `gorm:"default:true"`
+    ID        uint64    `gorm:"primaryKey;autoIncrement" json:"id"`
+    Name      string    `gorm:"uniqueIndex;not null" json:"name"`
+    Symbol    string    `gorm:"uniqueIndex;not null;size:10" json:"symbol"`
+    IsActive  bool      `gorm:"default:true" json:"is_active"`
+    CreatedAt time.Time `json:"created_at"`
+    UpdatedAt time.Time `json:"updated_at"`
+    DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 type TradingPair struct {
-    gorm.Model
-    Name       string `gorm:"uniqueIndex;not null"`
-    BaseID     uint   `gorm:"not null"`
-    QuoteID    uint   `gorm:"not null"`
-    ExchangeID uint   `gorm:"not null"`
-    IsActive   bool   `gorm:"default:true"`
-    Base       Coin   `gorm:"foreignKey:BaseID"`
-    Quote      Coin   `gorm:"foreignKey:QuoteID"`
-    Exchange   Exchange `gorm:"foreignKey:ExchangeID"`
+    ID         uint64   `gorm:"primaryKey;autoIncrement" json:"id"`
+    Name       string   `gorm:"uniqueIndex;not null" json:"name"`
+    BaseID     uint64   `gorm:"not null" json:"base_id"`
+    QuoteID    uint64   `gorm:"not null" json:"quote_id"`
+    ExchangeID uint64   `gorm:"not null" json:"exchange_id"`
+    IsActive   bool     `gorm:"default:true" json:"is_active"`
+    Base       Coin     `gorm:"foreignKey:BaseID" json:"base"`
+    Quote      Coin     `gorm:"foreignKey:QuoteID" json:"quote"`
+    Exchange   Exchange `gorm:"foreignKey:ExchangeID" json:"exchange"`
+    CreatedAt  time.Time `json:"created_at"`
+    UpdatedAt  time.Time `json:"updated_at"`
+    DeletedAt  gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 ```
 
@@ -176,12 +191,13 @@ Foundation project structure, configuration system, and database layer implement
 **Migration System ✅**
 - **Goose-based SQL migrations** with full control
 - Versioned migrations with up/down support
-- 5 initial migration files:
-  - Users table with authentication fields
+- Migration files use 4-digit prefix (0001_, 0002_, etc.)
+- Separate seed data migration (0005_seed_initial_data.sql)
+- 4 initial schema migration files:
+  - Users table with basic fields
   - Exchanges table for cryptocurrency exchanges
   - Coins table for cryptocurrencies  
   - Trading pairs with foreign key constraints
-  - Initial seed data
 
 **Docker Setup ✅**
 - Multi-stage Dockerfile optimized for production
@@ -231,11 +247,11 @@ Foundation project structure, configuration system, and database layer implement
 
 **Migration System:**
 - `cmd/migrate/main.go` - Complete Goose migration tool
-- `internal/database/migrations/001_create_users_table.sql` - Users table
-- `internal/database/migrations/002_create_exchanges_table.sql` - Exchanges table
-- `internal/database/migrations/003_create_coins_table.sql` - Coins table
-- `internal/database/migrations/004_create_trading_pairs_table.sql` - Trading pairs table
-- `internal/database/migrations/005_seed_initial_data.sql` - Initial seed data
+- `internal/database/migrations/0001_create_users_table.sql` - Users table
+- `internal/database/migrations/0002_create_exchanges_table.sql` - Exchanges table
+- `internal/database/migrations/0003_create_coins_table.sql` - Coins table
+- `internal/database/migrations/0004_create_trading_pairs_table.sql` - Trading pairs table
+- `internal/database/migrations/0005_seed_initial_data.sql` - Seed data migration
 - `internal/database/database.go` - Deprecated AutoMigrate method
 
 **Configuration & Infrastructure:**

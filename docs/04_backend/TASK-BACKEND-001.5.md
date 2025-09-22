@@ -48,7 +48,7 @@ func TestJWTTokenGeneration(t *testing.T) {
     authService := NewAuthService(mockConfig)
     
     user := &models.User{
-        ID:    uuid.New(),
+        ID:    123,
         Email: "test@example.com",
     }
     
@@ -174,7 +174,7 @@ func TestUserRepository(t *testing.T) {
         
         err := repo.Create(user)
         assert.NoError(t, err)
-        assert.NotEqual(t, uuid.Nil, user.ID)
+        assert.NotEqual(t, uint64(0), user.ID)
     })
     
     t.Run("get user by email", func(t *testing.T) {
@@ -255,7 +255,7 @@ func TestPermissionBypass(t *testing.T) {
     t.Run("trader cannot access other users' data", func(t *testing.T) {
         otherUser := createTestUser(t, "other@example.com", "password123")
         
-        resp := makeRequest(t, app, "GET", fmt.Sprintf("/api/v1/users/%s", otherUser.ID), "", token)
+        resp := makeRequest(t, app, "GET", fmt.Sprintf("/api/v1/users/%d", otherUser.ID), "", token)
         assert.Equal(t, 403, resp.StatusCode)
     })
 }
@@ -357,8 +357,8 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
+          type: integer
+          format: int64
         email:
           type: string
           format: email
@@ -458,10 +458,9 @@ cp config.example.yaml config.yaml
 docker-compose up -d mysql redis
 ```
 
-4. Run migrations
+4. Run migrations (includes seed data)
 ```bash
 go run cmd/migrate/main.go up
-go run cmd/migrate/main.go seed
 ```
 
 5. Create admin user

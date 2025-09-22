@@ -53,25 +53,22 @@ Implement enterprise-grade security system with JWT authentication, role-based a
 ## Database Schema
 
 ### Security Tables
+
+Extend existing users table and create new security tables.
+
+Use ALTER TABLE for users modifications and CREATE TABLE for new security tables.
+
 ```sql
--- Users with authentication
-users:
-- id (uuid, primary key)
-- email (varchar, unique, not null)
-- password_hash (varchar, not null)
-- first_name (varchar)
-- last_name (varchar)
-- is_active (boolean, default true)
-- email_verified (boolean, default false)
-- last_login_at (timestamp)
-- login_attempts (int, default 0)
-- locked_until (timestamp)
-- created_at (timestamp)
-- updated_at (timestamp)
+-- Extend existing users table with authentication fields
+ALTER TABLE users ADD COLUMN password_hash VARCHAR(255) NOT NULL;
+ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP NULL;
+ALTER TABLE users ADD COLUMN login_attempts INT DEFAULT 0;
+ALTER TABLE users ADD COLUMN locked_until TIMESTAMP NULL;
 
 -- Roles
 roles:
-- id (uuid, primary key)
+- id (bigint unsigned, primary key, auto_increment)
 - name (varchar, unique, not null)
 - description (text)
 - is_active (boolean, default true)
@@ -80,7 +77,7 @@ roles:
 
 -- Permissions
 permissions:
-- id (uuid, primary key)
+- id (bigint unsigned, primary key, auto_increment)
 - resource (varchar, not null)
 - action (varchar, not null)
 - description (text)
@@ -89,28 +86,28 @@ permissions:
 
 -- Role permissions
 role_permissions:
-- role_id (uuid, foreign key)
-- permission_id (uuid, foreign key)
+- role_id (bigint unsigned, foreign key)
+- permission_id (bigint unsigned, foreign key)
 - created_at (timestamp)
 
 -- User permissions (direct with allow/deny)
 user_permissions:
-- user_id (uuid, foreign key)
-- permission_id (uuid, foreign key)
+- user_id (bigint unsigned, foreign key)
+- permission_id (bigint unsigned, foreign key)
 - allow (boolean, not null)
 - created_at (timestamp)
 
 -- User roles
 user_roles:
-- user_id (uuid, foreign key)
-- role_id (uuid, foreign key)
+- user_id (bigint unsigned, foreign key)
+- role_id (bigint unsigned, foreign key)
 - assigned_at (timestamp)
-- assigned_by (uuid, foreign key users)
+- assigned_by (bigint unsigned, foreign key users)
 
 -- Password reset tokens
 password_reset_tokens:
-- id (uuid, primary key)
-- user_id (uuid, foreign key)
+- id (bigint unsigned, primary key, auto_increment)
+- user_id (bigint unsigned, foreign key)
 - token (varchar, unique, not null)
 - expires_at (timestamp, not null)
 - used_at (timestamp)
@@ -118,8 +115,8 @@ password_reset_tokens:
 
 -- Audit logs
 audit_logs:
-- id (uuid, primary key)
-- user_id (uuid, foreign key, nullable)
+- id (bigint unsigned, primary key, auto_increment)
+- user_id (bigint unsigned, foreign key, nullable)
 - action (varchar, not null)
 - resource (varchar, not null)
 - resource_id (varchar)
@@ -167,9 +164,9 @@ type JWTConfig struct {
 }
 
 type Claims struct {
-    UserID      uuid.UUID `json:"user_id"`
-    Email       string    `json:"email"`
-    Permissions []string  `json:"permissions"`
+    UserID      uint64   `json:"user_id"`
+    Email       string   `json:"email"`
+    Permissions []string `json:"permissions"`
     jwt.RegisteredClaims
 }
 ```
@@ -180,9 +177,9 @@ type Claims struct {
 // Examples: "users:create", "positions:read_own", "api_keys:manage_own"
 
 type PermissionChecker interface {
-    HasPermission(userID uuid.UUID, permission string) bool
-    GetUserPermissions(userID uuid.UUID) []string
-    CanAccessResource(userID uuid.UUID, resource string, resourceOwnerID uuid.UUID) bool
+    HasPermission(userID uint64, permission string) bool
+    GetUserPermissions(userID uint64) []string
+    CanAccessResource(userID uint64, resource string, resourceOwnerID uint64) bool
 }
 ```
 
@@ -197,15 +194,15 @@ type AuthService interface {
 
 type UserService interface {
     CreateUser(req CreateUserRequest) (*User, error)
-    GetUser(id uuid.UUID) (*User, error)
-    UpdateUser(id uuid.UUID, req UpdateUserRequest) error
-    ChangePassword(userID uuid.UUID, oldPass, newPass string) error
+    GetUser(id uint64) (*User, error)
+    UpdateUser(id uint64, req UpdateUserRequest) error
+    ChangePassword(userID uint64, oldPass, newPass string) error
 }
 
 type PermissionService interface {
-    AssignRoleToUser(userID, roleID uuid.UUID) error
-    GrantPermission(userID, permissionID uuid.UUID, allow bool) error
-    CheckPermission(userID uuid.UUID, permission string) bool
+    AssignRoleToUser(userID, roleID uint64) error
+    GrantPermission(userID, permissionID uint64, allow bool) error
+    CheckPermission(userID uint64, permission string) bool
 }
 ```
 
