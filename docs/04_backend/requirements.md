@@ -1,7 +1,7 @@
 # Backend Development Requirements
 
-**ID**: DOC-BACKEND-001  
-**Status**: in-progress  
+**ID**: DOC-BACKEND-001
+**Status**: in-progress
 **Last updated**: 2025-09-22
 
 ## Description
@@ -73,7 +73,7 @@ DCA levels from entry price:
 
 Take Profit from average position price:
 ├─ +8%: sell 25% of position
-├─ +15%: sell 35% of position  
+├─ +15%: sell 35% of position
 └─ +25%: sell 40% of position
 ```
 
@@ -268,7 +268,7 @@ GET /api/v1/analytics/dca/efficiency         // DCA effectiveness
 server:
   port: 8080
   host: "0.0.0.0"
-  
+
 database:
   host: "localhost"
   port: 3306

@@ -1,9 +1,9 @@
 # Subtask: Security System and JWT Authentication
 
-**ID**: TASK-BACKEND-001.2  
-**Parent**: TASK-BACKEND-001  
-**Status**: completed  
-**Priority**: Critical  
+**ID**: TASK-BACKEND-001.2
+**Parent**: TASK-BACKEND-001
+**Status**: completed
+**Priority**: Critical
 **Dependencies**: TASK-BACKEND-001.1
 
 ## Overview

@@ -1,7 +1,7 @@
 # [Название задачи]
 
-**ID**: DOC-[SECTION]-[NNN]  
-**Status**: planned | in-progress | done  
+**ID**: DOC-[SECTION]-[NNN]
+**Status**: planned | in-progress | done
 **Last updated**: YYYY-MM-DD
 
 ## Описание

@@ -84,6 +84,62 @@ All notable changes to the backend development documented in this file.
 - Default role hierarchy: super_admin, admin, trader, viewer
 - Granular permissions: resource:action format (users:create, positions:read_own, etc.)
 
+## [1.3.0] - 2025-09-22
+
+### Completed
+- **TASK-BACKEND-001.3**: Console Commands and User Management
+- Complete user management CLI tool with Cobra framework
+- Interactive password input with hidden terminal input
+- Enhanced migration command with automatic seeding
+- 16 new Makefile commands for user management
+
+### Added
+- `cmd/user/main.go`: Full-featured user management console tool (850+ lines)
+- Interactive password prompts using golang.org/x/term
+- Password validation (length, complexity requirements)
+- Email format validation with regex
+- User CRUD operations: create, list, show, update, activate, deactivate, delete
+- Role management: set-role, remove-role, roles, list-roles
+- Permission management: grant-permission, revoke-permission, permissions, list-permissions
+- Password management: reset-password, unlock
+- Enhanced migrate command with reset and seeding functionality
+
+### Dependencies
+- Added github.com/spf13/cobra v1.8.1 for CLI framework
+- Added golang.org/x/crypto v0.31.0 for bcrypt password hashing
+- Added golang.org/x/term v0.27.0 for hidden password input
+
+### Security Features
+- Interactive password input (no command line passwords)
+- Password strength validation (8+ chars, uppercase, lowercase, digit)
+- Email format validation
+- Role and permission validation against database
+- Confirmation prompts for destructive operations
+- Secure bcrypt password hashing with configurable cost
+
+### Makefile Commands
+- user-create: Interactive user creation
+- user-list: List users with filtering
+- user-show: Show user details by ID or email
+- user-update: Update user properties
+- user-activate/deactivate: Account status management
+- user-delete: Soft delete with confirmation
+- user-set-role/remove-role: Role management
+- user-roles: List user's roles
+- user-grant-permission/revoke-permission: Permission management
+- user-permissions: Show effective permissions
+- user-reset-password: Interactive password reset
+- user-unlock: Unlock locked accounts
+- user-list-roles: Show all available roles
+- user-list-permissions: Show all available permissions
+
+### Quality Assurance
+- Comprehensive error handling with user-friendly messages
+- Input validation for all commands and parameters
+- Transaction-based user creation with role assignment
+- Integration with existing database models and config system
+- Clear command documentation and usage examples
+
 ## [Unreleased]
 
 ### Added

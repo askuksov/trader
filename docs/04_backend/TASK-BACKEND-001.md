@@ -1,11 +1,11 @@
 # Task: Foundation and Security System Setup
 
-**ID**: TASK-BACKEND-001  
-**Milestone**: MILE-BACKEND-001  
-**Status**: planned  
-**Priority**: Critical  
-**Assigned**: Backend Developer  
-**Started**: TBD  
+**ID**: TASK-BACKEND-001
+**Milestone**: MILE-BACKEND-001
+**Status**: planned
+**Priority**: Critical
+**Assigned**: Backend Developer
+**Started**: TBD
 **Completed**: TBD
 
 ## Overview
@@ -360,12 +360,12 @@ services:
       MYSQL_DATABASE: trading_bot
     ports:
       - "3306:3306"
-    
+
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    
+
   app:
     build: .
     depends_on:

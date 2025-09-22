@@ -1,9 +1,9 @@
 # Subtask: Testing and Documentation
 
-**ID**: TASK-BACKEND-001.5  
-**Parent**: TASK-BACKEND-001  
-**Status**: planned  
-**Priority**: High  
+**ID**: TASK-BACKEND-001.5
+**Parent**: TASK-BACKEND-001
+**Status**: planned
+**Priority**: High
 **Dependencies**: TASK-BACKEND-001.4
 
 ## Overview
@@ -46,16 +46,16 @@ Implement comprehensive testing suite and documentation for the foundation and s
 ```go
 func TestJWTTokenGeneration(t *testing.T) {
     authService := NewAuthService(mockConfig)
-    
+
     user := &models.User{
         ID:    123,
         Email: "test@example.com",
     }
-    
+
     token, err := authService.GenerateAccessToken(user)
     assert.NoError(t, err)
     assert.NotEmpty(t, token)
-    
+
     // Validate token
     claims, err := authService.ValidateToken(token)
     assert.NoError(t, err)
@@ -65,15 +65,15 @@ func TestJWTTokenGeneration(t *testing.T) {
 
 func TestPasswordHashing(t *testing.T) {
     password := "testpassword123"
-    
+
     hash, err := HashPassword(password)
     assert.NoError(t, err)
     assert.NotEqual(t, password, hash)
-    
+
     // Verify password
     valid := VerifyPassword(password, hash)
     assert.True(t, valid)
-    
+
     // Invalid password
     invalid := VerifyPassword("wrongpassword", hash)
     assert.False(t, invalid)
@@ -104,7 +104,7 @@ func TestPermissionChecking(t *testing.T) {
             expected:   false,
         },
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             checker := NewPermissionChecker(mockDB)
@@ -119,7 +119,7 @@ func TestPermissionChecking(t *testing.T) {
 ```go
 func TestLoginHandler(t *testing.T) {
     app := setupTestApp()
-    
+
     tests := []struct {
         name       string
         body       string
@@ -141,12 +141,12 @@ func TestLoginHandler(t *testing.T) {
             statusCode: 401,
         },
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             req := httptest.NewRequest("POST", "/api/v1/auth/login", strings.NewReader(tt.body))
             req.Header.Set("Content-Type", "application/json")
-            
+        
             resp, err := app.Test(req)
             assert.NoError(t, err)
             assert.Equal(t, tt.statusCode, resp.StatusCode)
@@ -162,27 +162,27 @@ func TestLoginHandler(t *testing.T) {
 func TestUserRepository(t *testing.T) {
     db := setupTestDB(t)
     defer teardownTestDB(t, db)
-    
+
     repo := NewUserRepository(db)
-    
+
     t.Run("create user", func(t *testing.T) {
         user := &models.User{
             Email:     "test@example.com",
             FirstName: "Test",
             LastName:  "User",
         }
-        
+    
         err := repo.Create(user)
         assert.NoError(t, err)
         assert.NotEqual(t, uint64(0), user.ID)
     })
-    
+
     t.Run("get user by email", func(t *testing.T) {
         user, err := repo.GetByEmail("test@example.com")
         assert.NoError(t, err)
         assert.Equal(t, "test@example.com", user.Email)
     })
-    
+
     t.Run("user not found", func(t *testing.T) {
         _, err := repo.GetByEmail("notfound@example.com")
         assert.Error(t, err)
@@ -195,34 +195,34 @@ func TestUserRepository(t *testing.T) {
 ```go
 func TestAuthenticationFlow(t *testing.T) {
     app := setupTestApp()
-    
+
     // Create test user
     user := createTestUser(t, "test@example.com", "password123")
-    
+
     t.Run("complete auth flow", func(t *testing.T) {
         // Login
         loginReq := `{"email":"test@example.com","password":"password123"}`
         resp := makeRequest(t, app, "POST", "/api/v1/auth/login", loginReq, "")
         assert.Equal(t, 200, resp.StatusCode)
-        
+    
         var loginResp LoginResponse
         json.Unmarshal(getBody(resp), &loginResp)
         assert.NotEmpty(t, loginResp.AccessToken)
         assert.NotEmpty(t, loginResp.RefreshToken)
-        
+    
         // Access protected endpoint
         resp = makeRequest(t, app, "GET", "/api/v1/auth/me", "", loginResp.AccessToken)
         assert.Equal(t, 200, resp.StatusCode)
-        
+    
         // Refresh token
         refreshReq := fmt.Sprintf(`{"refresh_token":"%s"}`, loginResp.RefreshToken)
         resp = makeRequest(t, app, "POST", "/api/v1/auth/refresh", refreshReq, "")
         assert.Equal(t, 200, resp.StatusCode)
-        
+    
         // Logout
         resp = makeRequest(t, app, "POST", "/api/v1/auth/logout", refreshReq, loginResp.AccessToken)
         assert.Equal(t, 200, resp.StatusCode)
-        
+    
         // Try to use old token
         resp = makeRequest(t, app, "GET", "/api/v1/auth/me", "", loginResp.AccessToken)
         assert.Equal(t, 401, resp.StatusCode)
@@ -236,25 +236,25 @@ func TestAuthenticationFlow(t *testing.T) {
 ```go
 func TestPermissionBypass(t *testing.T) {
     app := setupTestApp()
-    
+
     // Create trader user
     traderUser := createTestUser(t, "trader@example.com", "password123")
     assignRole(t, traderUser.ID, "trader")
-    
+
     // Login as trader
     token := loginUser(t, app, "trader@example.com", "password123")
-    
+
     t.Run("trader cannot access admin endpoints", func(t *testing.T) {
         resp := makeRequest(t, app, "GET", "/api/v1/users", "", token)
         assert.Equal(t, 403, resp.StatusCode)
-        
+    
         resp = makeRequest(t, app, "POST", "/api/v1/users", `{"email":"new@example.com"}`, token)
         assert.Equal(t, 403, resp.StatusCode)
     })
-    
+
     t.Run("trader cannot access other users' data", func(t *testing.T) {
         otherUser := createTestUser(t, "other@example.com", "password123")
-        
+    
         resp := makeRequest(t, app, "GET", fmt.Sprintf("/api/v1/users/%d", otherUser.ID), "", token)
         assert.Equal(t, 403, resp.StatusCode)
     })
@@ -265,28 +265,28 @@ func TestPermissionBypass(t *testing.T) {
 ```go
 func TestTokenSecurity(t *testing.T) {
     app := setupTestApp()
-    
+
     t.Run("invalid token signature", func(t *testing.T) {
         invalidToken := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.invalid.signature"
-        
+    
         resp := makeRequest(t, app, "GET", "/api/v1/auth/me", "", invalidToken)
         assert.Equal(t, 401, resp.StatusCode)
     })
-    
+
     t.Run("expired token", func(t *testing.T) {
         expiredToken := generateExpiredToken(t)
-        
+    
         resp := makeRequest(t, app, "GET", "/api/v1/auth/me", "", expiredToken)
         assert.Equal(t, 401, resp.StatusCode)
     })
-    
+
     t.Run("blacklisted token", func(t *testing.T) {
         user := createTestUser(t, "test@example.com", "password123")
         token := loginUser(t, app, "test@example.com", "password123")
-        
+    
         // Logout (blacklist token)
         makeRequest(t, app, "POST", "/api/v1/auth/logout", "", token)
-        
+    
         // Try to use blacklisted token
         resp := makeRequest(t, app, "GET", "/api/v1/auth/me", "", token)
         assert.Equal(t, 401, resp.StatusCode)
@@ -300,7 +300,7 @@ func TestAPIPerformance(t *testing.T) {
     app := setupTestApp()
     user := createTestUser(t, "test@example.com", "password123")
     token := loginUser(t, app, "test@example.com", "password123")
-    
+
     t.Run("login performance", func(t *testing.T) {
         start := time.Now()
         for i := 0; i < 100; i++ {
@@ -308,10 +308,10 @@ func TestAPIPerformance(t *testing.T) {
         }
         duration := time.Since(start)
         avgDuration := duration / 100
-        
+    
         assert.Less(t, avgDuration, 200*time.Millisecond, "Login should complete in <200ms")
     })
-    
+
     t.Run("protected endpoint performance", func(t *testing.T) {
         start := time.Now()
         for i := 0; i < 100; i++ {
@@ -319,7 +319,7 @@ func TestAPIPerformance(t *testing.T) {
         }
         duration := time.Since(start)
         avgDuration := duration / 100
-        
+    
         assert.Less(t, avgDuration, 50*time.Millisecond, "Protected endpoint should respond in <50ms")
     })
 }
@@ -371,7 +371,7 @@ components:
         created_at:
           type: string
           format: date-time
-        
+    
     Error:
       type: object
       properties:

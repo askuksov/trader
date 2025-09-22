@@ -69,24 +69,29 @@ logs-mailpit: ## Show logs from Mailpit
 build: ## Rebuild all Docker images
 	@echo "🔨 Building all Docker images..."
 	cd deployments && docker compose -f docker-compose.dev.yml build --no-cache
-	@echo "✅ All images built!"
+	@echo " ✅ All images built!"
 
 build-backend: ## Rebuild backend Docker image only
 	@echo "🔨 Building backend Docker image..."
 	cd deployments && docker compose -f docker-compose.dev.yml build --no-cache backend
-	@echo "✅ Backend image built!"
+	@echo " ✅ Backend image built!"
+
+build-backend-fast: ## Fast rebuild backend Docker image only
+	@echo "🔨 Building backend Docker image..."
+	cd deployments && docker compose -f docker-compose.dev.yml build backend
+	@echo " ✅ Backend image built!"
 
 build-frontend: ## Rebuild frontend Docker image only
 	@echo "🔨 Building frontend Docker image..."
 	cd deployments && docker compose -f docker-compose.dev.yml build --no-cache frontend
-	@echo "✅ Frontend image built!"
+	@echo " ✅ Frontend image built!"
 
 # Development commands
 clean: ## Clean up Docker resources (containers, images, volumes)
 	@echo "🧹 Cleaning up Docker resources..."
 	cd deployments && docker compose -f docker-compose.dev.yml down -v --rmi all --remove-orphans
 	docker system prune -f
-	@echo "✅ Cleanup complete!"
+	@echo " ✅ Cleanup complete!"
 
 reset: ## Full reset (clean + up)
 	@echo "🔄 Performing full reset..."
@@ -122,6 +127,138 @@ db-migrate-reset: ## Reset all database migrations (careful!)
 	else \
 		echo "❌ Database reset cancelled."; \
 	fi
+
+# User management commands
+user-create: ## Create a new user (interactive)
+	@echo "👤 Creating new user..."
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend user create
+
+user-list: ## List all users
+	@echo "👥 Listing users..."
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend user list
+
+user-show: ## Show user details (specify USER_ID or EMAIL)
+	@if [ -z "$(USER_ID)" ] && [ -z "$(EMAIL)" ]; then \
+		echo "❌ Please specify USER_ID or EMAIL: make user-show USER_ID=123 or make user-show EMAIL=user@example.com"; \
+	else \
+		echo "👤 Showing user details..."; \
+		if [ -n "$(USER_ID)" ]; then \
+			cd deployments && docker compose -f docker-compose.dev.yml exec backend user show --id=$(USER_ID); \
+		else \
+			cd deployments && docker compose -f docker-compose.dev.yml exec backend user show --email=$(EMAIL); \
+		fi; \
+	fi
+
+user-update: ## Update user (specify USER_ID and optional fields)
+	@if [ -z "$(USER_ID)" ]; then \
+		echo "❌ Please specify USER_ID: make user-update USER_ID=123 EMAIL=new@example.com"; \
+	else \
+		echo "👤 Updating user..."; \
+		cmd="user update --id=$(USER_ID)"; \
+		if [ -n "$(EMAIL)" ]; then cmd="$cmd --email=$(EMAIL)"; fi; \
+		if [ -n "$(FIRST_NAME)" ]; then cmd="$cmd --first-name=$(FIRST_NAME)"; fi; \
+		if [ -n "$(LAST_NAME)" ]; then cmd="$cmd --last-name=$(LAST_NAME)"; fi; \
+		if [ -n "$(ACTIVE)" ]; then cmd="$cmd --active=$(ACTIVE)"; fi; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend $cmd; \
+	fi
+
+user-activate: ## Activate user (specify USER_ID)
+	@if [ -z "$(USER_ID)" ]; then \
+		echo "❌ Please specify USER_ID: make user-activate USER_ID=123"; \
+	else \
+		echo "👤 Activating user..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user activate --id=$(USER_ID); \
+	fi
+
+user-deactivate: ## Deactivate user (specify USER_ID)
+	@if [ -z "$(USER_ID)" ]; then \
+		echo "❌ Please specify USER_ID: make user-deactivate USER_ID=123"; \
+	else \
+		echo "👤 Deactivating user..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user deactivate --id=$(USER_ID); \
+	fi
+
+user-delete: ## Delete user (specify USER_ID)
+	@if [ -z "$(USER_ID)" ]; then \
+		echo "❌ Please specify USER_ID: make user-delete USER_ID=123"; \
+	else \
+		echo "👤 Deleting user..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user delete --id=$(USER_ID); \
+	fi
+
+user-set-role: ## Set user role (specify USER_ID and ROLE)
+	@if [ -z "$(USER_ID)" ] || [ -z "$(ROLE)" ]; then \
+		echo "❌ Please specify USER_ID and ROLE: make user-set-role USER_ID=123 ROLE=admin"; \
+	else \
+		echo "👤 Setting user role..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user set-role --id=$(USER_ID) --role=$(ROLE); \
+	fi
+
+user-remove-role: ## Remove user role (specify USER_ID and ROLE)
+	@if [ -z "$(USER_ID)" ] || [ -z "$(ROLE)" ]; then \
+		echo "❌ Please specify USER_ID and ROLE: make user-remove-role USER_ID=123 ROLE=admin"; \
+	else \
+		echo "👤 Removing user role..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user remove-role --id=$(USER_ID) --role=$(ROLE); \
+	fi
+
+user-roles: ## List user roles (specify USER_ID)
+	@if [ -z "$(USER_ID)" ]; then \
+		echo "❌ Please specify USER_ID: make user-roles USER_ID=123"; \
+	else \
+		echo "👤 Listing user roles..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user roles --id=$(USER_ID); \
+	fi
+
+user-grant-permission: ## Grant permission to user (specify USER_ID, PERMISSION, and optionally ALLOW)
+	@if [ -z "$(USER_ID)" ] || [ -z "$(PERMISSION)" ]; then \
+		echo "❌ Please specify USER_ID and PERMISSION: make user-grant-permission USER_ID=123 PERMISSION=users:create ALLOW=true"; \
+	else \
+		echo "👤 Granting permission..."; \
+		cmd="user grant-permission --id=$(USER_ID) --permission=$(PERMISSION)"; \
+		if [ -n "$(ALLOW)" ]; then cmd="$cmd --allow=$(ALLOW)"; fi; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend $cmd; \
+	fi
+
+user-revoke-permission: ## Revoke permission from user (specify USER_ID and PERMISSION)
+	@if [ -z "$(USER_ID)" ] || [ -z "$(PERMISSION)" ]; then \
+		echo "❌ Please specify USER_ID and PERMISSION: make user-revoke-permission USER_ID=123 PERMISSION=users:create"; \
+	else \
+		echo "👤 Revoking permission..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user revoke-permission --id=$(USER_ID) --permission=$(PERMISSION); \
+	fi
+
+user-permissions: ## List user permissions (specify USER_ID)
+	@if [ -z "$(USER_ID)" ]; then \
+		echo "❌ Please specify USER_ID: make user-permissions USER_ID=123"; \
+	else \
+		echo "👤 Listing user permissions..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user permissions --id=$(USER_ID); \
+	fi
+
+user-reset-password: ## Reset user password (specify USER_ID)
+	@if [ -z "$(USER_ID)" ]; then \
+		echo "❌ Please specify USER_ID: make user-reset-password USER_ID=123"; \
+	else \
+		echo "👤 Resetting user password..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user reset-password --id=$(USER_ID); \
+	fi
+
+user-unlock: ## Unlock user account (specify USER_ID)
+	@if [ -z "$(USER_ID)" ]; then \
+		echo "❌ Please specify USER_ID: make user-unlock USER_ID=123"; \
+	else \
+		echo "👤 Unlocking user account..."; \
+		cd deployments && docker compose -f docker-compose.dev.yml exec backend user unlock --id=$(USER_ID); \
+	fi
+
+user-list-roles: ## List all available roles
+	@echo "📋 Listing all roles..."
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend user list-roles
+
+user-list-permissions: ## List all available permissions
+	@echo "📋 Listing all permissions..."
+	cd deployments && docker compose -f docker-compose.dev.yml exec backend user list-permissions
 
 db-backup: ## Create database backup
 	@echo "💾 Creating database backup..."

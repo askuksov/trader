@@ -1,9 +1,9 @@
 # Subtask: HTTP API and Middleware
 
-**ID**: TASK-BACKEND-001.4  
-**Parent**: TASK-BACKEND-001  
-**Status**: planned  
-**Priority**: High  
+**ID**: TASK-BACKEND-001.4
+**Parent**: TASK-BACKEND-001
+**Status**: planned
+**Priority**: High
 **Dependencies**: TASK-BACKEND-001.3
 
 ## Overview
@@ -85,7 +85,7 @@ func setupServer() *fiber.App {
         WriteTimeout: 10 * time.Second,
         ErrorHandler: globalErrorHandler,
     })
-    
+  
     // Global middleware
     app.Use(logger.New())
     app.Use(cors.New(cors.Config{
@@ -97,10 +97,10 @@ func setupServer() *fiber.App {
         Max:        100,
         Expiration: 1 * time.Minute,
     }))
-    
+  
     // Routes
     setupRoutes(app)
-    
+  
     return app
 }
 ```
@@ -116,7 +116,7 @@ func AuthMiddleware(authService services.AuthService) fiber.Handler {
                 Message: "Missing or invalid token",
             })
         }
-        
+      
         claims, err := authService.ValidateToken(token)
         if err != nil {
             return c.Status(401).JSON(response.Error{
@@ -124,7 +124,7 @@ func AuthMiddleware(authService services.AuthService) fiber.Handler {
                 Message: "Token validation failed",
             })
         }
-        
+      
         // Check if token is blacklisted
         if authService.IsTokenBlacklisted(token) {
             return c.Status(401).JSON(response.Error{
@@ -132,12 +132,12 @@ func AuthMiddleware(authService services.AuthService) fiber.Handler {
                 Message: "Token has been revoked",
             })
         }
-        
+      
         // Store user info in context
         c.Locals("user_id", claims.UserID)
         c.Locals("email", claims.Email)
         c.Locals("permissions", claims.Permissions)
-        
+      
         return c.Next()
     }
 }
@@ -149,7 +149,7 @@ func RequirePermission(permission string) fiber.Handler {
     return func(c *fiber.Ctx) error {
         userID := c.Locals("user_id").(uint64)
         permissions := c.Locals("permissions").([]string)
-        
+      
         // Check if user has required permission
         if !hasPermission(permissions, permission) {
             return c.Status(403).JSON(response.Error{
@@ -157,7 +157,7 @@ func RequirePermission(permission string) fiber.Handler {
                 Message: "Insufficient permissions",
             })
         }
-        
+      
         return c.Next()
     }
 }
@@ -166,7 +166,7 @@ func RequireResourceAccess(resourceParam string) fiber.Handler {
     return func(c *fiber.Ctx) error {
         userID := c.Locals("user_id").(uint64)
         resourceID := c.Params(resourceParam)
-        
+      
         // Check if user can access this resource
         if !canAccessResource(userID, resourceID, c) {
             return c.Status(403).JSON(response.Error{
@@ -174,7 +174,7 @@ func RequireResourceAccess(resourceParam string) fiber.Handler {
                 Message: "Access denied to this resource",
             })
         }
-        
+      
         return c.Next()
     }
 }
@@ -230,25 +230,25 @@ type ChangePasswordRequest struct {
 ```go
 func setupRoutes(app *fiber.App) {
     api := app.Group("/api/v1")
-    
+  
     // Public routes
     auth := api.Group("/auth")
     auth.Post("/login", handlers.Login)
     auth.Post("/refresh", handlers.RefreshToken)
     auth.Post("/forgot-password", handlers.ForgotPassword)
     auth.Post("/reset-password", handlers.ResetPassword)
-    
+  
     // Protected routes
     protected := api.Group("", middleware.AuthMiddleware(authService))
     protected.Get("/auth/me", handlers.GetCurrentUser)
     protected.Post("/auth/logout", handlers.Logout)
-    
+  
     // Profile routes
     profile := protected.Group("/profile")
     profile.Get("/", handlers.GetProfile)
     profile.Put("/", handlers.UpdateProfile)
     profile.Put("/password", handlers.ChangePassword)
-    
+  
     // Admin only routes
     admin := protected.Group("", middleware.RequirePermission("users:read"))
     admin.Get("/users", handlers.GetUsers)
@@ -262,7 +262,7 @@ func setupRoutes(app *fiber.App) {
     admin.Delete("/users/:id", 
         middleware.RequirePermission("users:delete"),
         handlers.DeleteUser)
-    
+  
     // System routes
     app.Get("/health", handlers.HealthCheck)
     app.Get("/metrics", handlers.PrometheusMetrics)
@@ -279,7 +279,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
             Message: "Invalid request body",
         })
     }
-    
+  
     if err := h.validator.Validate(req); err != nil {
         return c.Status(400).JSON(response.Error{
             Code:    "VALIDATION_ERROR", 
@@ -287,7 +287,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
             Details: err.Error(),
         })
     }
-    
+  
     tokenPair, user, err := h.authService.Login(req.Email, req.Password)
     if err != nil {
         return c.Status(401).JSON(response.Error{
@@ -295,7 +295,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
             Message: "Invalid credentials",
         })
     }
-    
+  
     return c.JSON(LoginResponse{
         AccessToken:  tokenPair.AccessToken,
         RefreshToken: tokenPair.RefreshToken,
@@ -310,12 +310,12 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 func globalErrorHandler(c *fiber.Ctx, err error) error {
     code := fiber.StatusInternalServerError
     message := "Internal server error"
-    
+  
     if e, ok := err.(*fiber.Error); ok {
         code = e.Code
         message = e.Message
     }
-    
+  
     // Log error
     log.Error().
         Err(err).
@@ -323,7 +323,7 @@ func globalErrorHandler(c *fiber.Ctx, err error) error {
         Str("path", c.Path()).
         Str("ip", c.IP()).
         Msg("HTTP error")
-    
+  
     return c.Status(code).JSON(response.Error{
         Code:    "HTTP_ERROR",
         Message: message,

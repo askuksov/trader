@@ -1,7 +1,7 @@
 # Milestone: DevOps Infrastructure
 
-**ID**: MILE-DEVOPS-001  
-**Status**: done  
+**ID**: MILE-DEVOPS-001
+**Status**: done
 **Last updated**: 2025-09-22
 
 ## Goal
@@ -21,7 +21,7 @@ Establish complete local development environment with Docker Compose supporting 
 ## Included tasks
 
 - [x] TASK-DEVOPS-001 — Core infrastructure setup (done)
-- [x] TASK-DEVOPS-002 — Database and storage configuration (done)  
+- [x] TASK-DEVOPS-002 — Database and storage configuration (done)
 - [x] TASK-DEVOPS-003 — Development tools and workflow (done)
 - [x] TASK-DEVOPS-004 — Monitoring and observability (done)
 - [x] TASK-DEVOPS-005 — Documentation and validation (done)

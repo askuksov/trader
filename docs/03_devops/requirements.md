@@ -1,7 +1,7 @@
 # DevOps Infrastructure Requirements
 
-**ID**: DOC-DEVOPS-001  
-**Status**: done  
+**ID**: DOC-DEVOPS-001
+**Status**: done
 **Last updated**: 2025-09-22
 
 ## Description

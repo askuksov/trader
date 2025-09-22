@@ -424,11 +424,11 @@ security:
   wal_encryption: true
   position_locks: distributed
   session_timeout: 3600
-  
+
   rate_limiting:
     api_requests_per_minute: 1000
     position_operations_per_second: 5
-    
+
   access_control:
     admin_roles: ["admin", "risk_manager"]
     trader_roles: ["trader", "analyst"]

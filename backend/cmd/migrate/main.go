@@ -179,13 +179,13 @@ Options:
         directory with migration files (default "migrations")
 
 Commands:
-    up                   Migrate the DB to the most recent version available
+    up                   Migrate the DB to the most recent version available (includes seed data)
     up-by-one            Migrate the DB up by 1
     up-to VERSION        Migrate the DB to a specific VERSION
     down                 Roll back the version by 1
     down-to VERSION      Roll back to a specific VERSION
     redo                 Re-run the latest migration
-    reset                Roll back all migrations
+    reset                Roll back all migrations and re-apply with seed data
     status               Dump the migration status for the current DB
     version              Print the current version of the database
     create NAME [sql|go] Creates new migration file with the current timestamp

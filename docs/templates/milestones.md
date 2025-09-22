@@ -1,7 +1,7 @@
 # Milestone: [название]
 
-**ID**: MILE-[NNN]  
-**Status**: planned | in-progress | done  
+**ID**: MILE-[NNN]
+**Status**: planned | in-progress | done
 **Last updated**: YYYY-MM-DD
 
 ## Цель

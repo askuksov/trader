@@ -21,6 +21,9 @@ COPY . .
 # Build the migrate tool
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/migrate ./cmd/migrate
 
+# Build user tool
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/user ./cmd/user
+
 # Expose port
 EXPOSE 8080
 

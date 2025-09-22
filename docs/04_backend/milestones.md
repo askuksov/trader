@@ -1,7 +1,7 @@
 # Milestone: Backend Development - Trading Bot
 
-**ID**: MILE-BACKEND-001  
-**Status**: in-progress  
+**ID**: MILE-BACKEND-001
+**Status**: in-progress
 **Last updated**: 2025-09-22
 
 ## Goal
