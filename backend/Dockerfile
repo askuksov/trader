@@ -15,6 +15,9 @@ FROM base AS development
 # Install Air for live reload
 RUN go install github.com/air-verse/air@latest
 
+# Install Delve for debugging
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
 # Copy source code
 COPY . .
 
