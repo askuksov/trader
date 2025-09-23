@@ -51,7 +51,7 @@ type UserInfo struct {
 	Email         string     `json:"email"`
 	FirstName     string     `json:"first_name"`
 	LastName      string     `json:"last_name"`
-	IsActive      bool       `json:"is_active"`
+	IsActive      *bool      `json:"is_active"`
 	EmailVerified bool       `json:"email_verified"`
 	LastLoginAt   *time.Time `json:"last_login_at"`
 	Roles         []string   `json:"roles"`
@@ -75,6 +75,8 @@ func (s *AuthService) Login(ctx context.Context, req *LoginRequest) (*LoginRespo
 	err := s.db.Preload("Roles.Permissions").Preload("Permissions.Permission").
 		Where("email = ?", req.Email).First(&user).Error
 	if err != nil {
+		// Add timing attacks protection, run bcrypt hash even if user not found
+		_ = bcrypt.CompareHashAndPassword([]byte("$2a$12$wI0Vh8Hj8Hj8Hj8Hj8HjOeJ8Hj8Hj8Hj8Hj8Hj8Hj8Hj8Hj8Hj8H"), []byte(req.Password))
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrInvalidCredentials
 		}
@@ -82,7 +84,7 @@ func (s *AuthService) Login(ctx context.Context, req *LoginRequest) (*LoginRespo
 	}
 
 	// Check if user can login
-	if !user.IsActive {
+	if user.IsActive == nil || !*user.IsActive {
 		return nil, ErrUserInactive
 	}
 
@@ -136,7 +138,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *RefreshTokenRequest
 	// Validate refresh token
 	claims, err := s.jwtManager.ValidateRefreshToken(req.RefreshToken)
 	if err != nil {
-		return nil, fmt.Errorf("invalid refresh token: %w", err)
+		return nil, ErrTokenNotFound
 	}
 
 	// Check if token is blacklisted
@@ -153,7 +155,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, req *RefreshTokenRequest
 	}
 
 	// Check if user is still active
-	if !user.IsActive || user.IsLocked() {
+	if user.IsActive == nil || !*user.IsActive || user.IsLocked() {
 		return nil, ErrUserInactive
 	}
 

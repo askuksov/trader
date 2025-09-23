@@ -2,7 +2,7 @@
   email: "admin@example.com"
   first_name: "Admin"
   last_name: "User"
-  password_hash: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewF5UooPh6b4/HSy" # password123
+  password_hash: "$2a$12$DtoZR4644YP7QeivtjznkONUPL.MhyAdIJRQTYQoOoemuuZ/qb8Sa" # password123
   email_verified: true
   is_active: true
   login_attempts: 0
@@ -12,7 +12,7 @@
   email: "trader@example.com"
   first_name: "Trader"
   last_name: "User"
-  password_hash: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewF5UooPh6b4/HSy" # password123
+  password_hash: "$2a$12$DtoZR4644YP7QeivtjznkONUPL.MhyAdIJRQTYQoOoemuuZ/qb8Sa" # password123
   email_verified: true
   is_active: true
   login_attempts: 0
@@ -22,7 +22,7 @@
   email: "viewer@example.com"
   first_name: "Viewer"
   last_name: "User"
-  password_hash: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewF5UooPh6b4/HSy" # password123
+  password_hash: "$2a$12$DtoZR4644YP7QeivtjznkONUPL.MhyAdIJRQTYQoOoemuuZ/qb8Sa" # password123
   email_verified: true
   is_active: true
   login_attempts: 0
@@ -32,7 +32,7 @@
   email: "inactive@example.com"
   first_name: "Inactive"
   last_name: "User"
-  password_hash: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewF5UooPh6b4/HSy" # password123
+  password_hash: "$2a$12$DtoZR4644YP7QeivtjznkONUPL.MhyAdIJRQTYQoOoemuuZ/qb8Sa" # password123
   email_verified: false
   is_active: false
   login_attempts: 0
@@ -42,7 +42,7 @@
   email: "locked@example.com"
   first_name: "Locked"
   last_name: "User"
-  password_hash: "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewF5UooPh6b4/HSy" # password123
+  password_hash: "$2a$12$DtoZR4644YP7QeivtjznkONUPL.MhyAdIJRQTYQoOoemuuZ/qb8Sa" # password123
   email_verified: true
   is_active: true
   login_attempts: 5

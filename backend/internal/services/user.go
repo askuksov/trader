@@ -80,12 +80,13 @@ func (s *UserService) CreateUser(ctx context.Context, req *CreateUserRequest, cr
 	}
 
 	// Create user
+	isActive := true
 	user := models.User{
 		Email:        req.Email,
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
 		PasswordHash: string(hashedPassword),
-		IsActive:     true,
+		IsActive:     &isActive,
 	}
 
 	// Start transaction
@@ -265,7 +266,7 @@ func (s *UserService) UpdateUser(ctx context.Context, userID uint, req *UpdateUs
 		user.LastName = *req.LastName
 	}
 	if req.IsActive != nil {
-		user.IsActive = *req.IsActive
+		user.IsActive = req.IsActive
 	}
 
 	if err := s.db.Save(&user).Error; err != nil {

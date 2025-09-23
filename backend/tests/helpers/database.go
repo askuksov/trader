@@ -28,7 +28,7 @@ type TestDB struct {
 // SetupTestDB creates an in-memory SQLite database for testing
 func SetupTestDB(t testing.TB) *TestDB {
 	// Create test database file with unique name
-	testDBPath := fmt.Sprintf("file:test_%d.db?mode=memory&cache=shared", time.Now().UnixNano())
+	testDBPath := fmt.Sprintf("file:test_%d.db?mode=memory&cache=shared&_journal_mode=WAL&_busy_timeout=5000", time.Now().UnixNano())
 	db, err := gorm.Open(sqlite.Open(testDBPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -111,12 +111,13 @@ func (tdb *TestDB) CreateTestUserWithPassword(t testing.TB, email, firstName, la
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	require.NoError(t, err)
 
+	isActive := true
 	user := &models.User{
 		Email:        email,
 		FirstName:    firstName,
 		LastName:     lastName,
 		PasswordHash: string(hashedPassword),
-		IsActive:     true,
+		IsActive:     &isActive,
 	}
 
 	err = tdb.DB.Create(user).Error

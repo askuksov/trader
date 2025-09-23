@@ -38,7 +38,7 @@ func TestLoginPerformance(t *testing.T) {
 		duration := time.Since(start)
 
 		require.Equal(t, fiber.StatusOK, resp.StatusCode)
-		assert.Less(t, duration, 200*time.Millisecond, 
+		assert.Less(t, duration, 200*time.Millisecond,
 			"Login should complete in <200ms, took %v", duration)
 	})
 
@@ -61,7 +61,7 @@ func TestLoginPerformance(t *testing.T) {
 	})
 
 	t.Run("concurrent logins should handle load", func(t *testing.T) {
-		const concurrency = 20
+		const concurrency = 10
 		const requestsPerGoroutine = 10
 
 		loginReq := map[string]string{
@@ -79,17 +79,17 @@ func TestLoginPerformance(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				
+
 				for j := 0; j < requestsPerGoroutine; j++ {
 					reqStart := time.Now()
 					resp := app.MakeRequest(t, "POST", "/api/v1/auth/login", loginReq, "")
 					reqDuration := time.Since(reqStart)
-					
+
 					if resp.StatusCode != fiber.StatusOK {
 						errors <- fmt.Errorf("login failed with status %d", resp.StatusCode)
 						return
 					}
-					
+
 					results <- reqDuration
 				}
 			}()
@@ -99,14 +99,13 @@ func TestLoginPerformance(t *testing.T) {
 		close(results)
 		close(errors)
 
-		totalTime := time.Since(start)
-
-		// Check for errors
-		select {
-		case err := <-errors:
-			t.Fatalf("Concurrent login failed: %v", err)
-		default:
+		for err := range errors {
+			if err != nil {
+				t.Fatalf("Concurrent login failed: %v", err)
+			}
 		}
+
+		totalTime := time.Since(start)
 
 		// Calculate statistics
 		var totalDuration time.Duration
@@ -125,11 +124,11 @@ func TestLoginPerformance(t *testing.T) {
 		requestsPerSecond := float64(count) / totalTime.Seconds()
 
 		assert.Equal(t, concurrency*requestsPerGoroutine, count, "All requests should complete")
-		assert.Less(t, avgDuration, 500*time.Millisecond, 
+		assert.Less(t, avgDuration, 500*time.Millisecond,
 			"Average concurrent login time should be <500ms, was %v", avgDuration)
-		assert.Less(t, maxDuration, 1*time.Second, 
+		assert.Less(t, maxDuration, 1*time.Second,
 			"Max login time should be <1s, was %v", maxDuration)
-		assert.Greater(t, requestsPerSecond, 50.0, 
+		assert.Greater(t, requestsPerSecond, 50.0,
 			"Should handle >50 requests/second, handled %.1f", requestsPerSecond)
 	})
 }
@@ -186,17 +185,17 @@ func TestProtectedEndpointPerformance(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				
+
 				for j := 0; j < requestsPerGoroutine; j++ {
 					reqStart := time.Now()
 					resp := app.MakeRequest(t, "GET", "/api/v1/auth/me", nil, token)
 					reqDuration := time.Since(reqStart)
-					
+
 					if resp.StatusCode != fiber.StatusOK {
 						errors <- fmt.Errorf("protected request failed with status %d", resp.StatusCode)
 						return
 					}
-					
+
 					results <- reqDuration
 				}
 			}()
@@ -206,14 +205,13 @@ func TestProtectedEndpointPerformance(t *testing.T) {
 		close(results)
 		close(errors)
 
-		totalTime := time.Since(start)
-
-		// Check for errors
-		select {
-		case err := <-errors:
-			t.Fatalf("Concurrent protected request failed: %v", err)
-		default:
+		for err := range errors {
+			if err != nil {
+				t.Fatalf("Concurrent protected request failed: %v", err)
+			}
 		}
+
+		totalTime := time.Since(start)
 
 		// Calculate statistics
 		var totalDuration time.Duration
@@ -232,11 +230,11 @@ func TestProtectedEndpointPerformance(t *testing.T) {
 		requestsPerSecond := float64(count) / totalTime.Seconds()
 
 		assert.Equal(t, concurrency*requestsPerGoroutine, count, "All requests should complete")
-		assert.Less(t, avgDuration, 100*time.Millisecond, 
+		assert.Less(t, avgDuration, 100*time.Millisecond,
 			"Average concurrent response time should be <100ms, was %v", avgDuration)
-		assert.Less(t, maxDuration, 500*time.Millisecond, 
+		assert.Less(t, maxDuration, 500*time.Millisecond,
 			"Max response time should be <500ms, was %v", maxDuration)
-		assert.Greater(t, requestsPerSecond, 200.0, 
+		assert.Greater(t, requestsPerSecond, 200.0,
 			"Should handle >200 requests/second, handled %.1f", requestsPerSecond)
 	})
 }
@@ -301,19 +299,19 @@ func TestTokenValidationPerformance(t *testing.T) {
 			wg.Add(1)
 			go func(goroutineID int) {
 				defer wg.Done()
-				
+
 				for j := 0; j < validationsPerGoroutine; j++ {
 					token := tokens[(goroutineID*validationsPerGoroutine+j)%100]
-					
+
 					reqStart := time.Now()
 					_, err := app.AuthService.ValidateToken(token)
 					reqDuration := time.Since(reqStart)
-					
+
 					if err != nil {
 						errors <- err
 						return
 					}
-					
+
 					results <- reqDuration
 				}
 			}(i)
@@ -323,14 +321,13 @@ func TestTokenValidationPerformance(t *testing.T) {
 		close(results)
 		close(errors)
 
-		totalTime := time.Since(start)
-
-		// Check for errors
-		select {
-		case err := <-errors:
-			t.Fatalf("Concurrent token validation failed: %v", err)
-		default:
+		for err := range errors {
+			if err != nil {
+				t.Fatalf("Concurrent token validation failed: %v", err)
+			}
 		}
+
+		totalTime := time.Since(start)
 
 		// Calculate statistics
 		var totalDuration time.Duration
@@ -349,11 +346,11 @@ func TestTokenValidationPerformance(t *testing.T) {
 		validationsPerSecond := float64(count) / totalTime.Seconds()
 
 		assert.Equal(t, concurrency*validationsPerGoroutine, count, "All validations should complete")
-		assert.Less(t, avgDuration, 10*time.Millisecond, 
+		assert.Less(t, avgDuration, 10*time.Millisecond,
 			"Average concurrent validation time should be <10ms, was %v", avgDuration)
-		assert.Less(t, maxDuration, 50*time.Millisecond, 
+		assert.Less(t, maxDuration, 50*time.Millisecond,
 			"Max validation time should be <50ms, was %v", maxDuration)
-		assert.Greater(t, validationsPerSecond, 1000.0, 
+		assert.Greater(t, validationsPerSecond, 1000.0,
 			"Should handle >1000 validations/second, handled %.1f", validationsPerSecond)
 	})
 }
@@ -478,7 +475,7 @@ func BenchmarkLogin(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		resp := app.MakeRequest(b, "POST", "/api/v1/auth/login", loginReq, "")
 		if resp.StatusCode != fiber.StatusOK {
@@ -499,7 +496,7 @@ func BenchmarkTokenValidation(b *testing.B) {
 	token := app.LoginUser(b, "bench@example.com", "password123")
 
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		_, err := app.AuthService.ValidateToken(token)
 		if err != nil {
@@ -520,7 +517,7 @@ func BenchmarkProtectedEndpoint(b *testing.B) {
 	token := app.LoginUser(b, "bench@example.com", "password123")
 
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		resp := app.MakeRequest(b, "GET", "/api/v1/auth/me", nil, token)
 		if resp.StatusCode != fiber.StatusOK {

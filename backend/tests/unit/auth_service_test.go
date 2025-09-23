@@ -41,11 +41,11 @@ func createTestUserWithPassword(t *testing.T, testDB *helpers.TestDB, email, pas
 	require.NoError(t, err)
 
 	user := &models.User{
-		Email:        email,
-		FirstName:    "Test",
-		LastName:     "User",
-		PasswordHash: string(hashedPassword),
-		IsActive:     active,
+		Email:         email,
+		FirstName:     "Test",
+		LastName:      "User",
+		PasswordHash:  string(hashedPassword),
+		IsActive:      &active,
 		EmailVerified: true, // Set email verified for tests
 	}
 
@@ -56,7 +56,7 @@ func createTestUserWithPassword(t *testing.T, testDB *helpers.TestDB, email, pas
 	var createdUser models.User
 	err = testDB.DB.Where("email = ?", email).First(&createdUser).Error
 	require.NoError(t, err)
-	require.Equal(t, active, createdUser.IsActive, "User active status mismatch")
+	require.Equal(t, active, *createdUser.IsActive, "User active status mismatch")
 
 	// Assign roles if provided
 	for _, roleName := range roles {
@@ -96,7 +96,7 @@ func TestAuthService_Login(t *testing.T) {
 		assert.NotNil(t, response.User)
 		assert.Equal(t, user.ID, response.User.ID)
 		assert.Equal(t, user.Email, response.User.Email)
-		assert.True(t, response.User.IsActive)
+		assert.True(t, *response.User.IsActive)
 	})
 
 	t.Run("login failure with invalid email", func(t *testing.T) {
@@ -270,8 +270,7 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		_, err := authService.RefreshToken(ctx, refreshReq)
 
 		require.Error(t, err)
-		// Should be invalid token error (wrapped)
-		assert.Contains(t, err.Error(), "invalid refresh token")
+		assert.Contains(t, err.Error(), "token not found")
 	})
 
 	t.Run("refresh with blacklisted token", func(t *testing.T) {
@@ -316,7 +315,8 @@ func TestAuthService_RefreshToken(t *testing.T) {
 		require.NoError(t, err)
 
 		// Deactivate user after login
-		user.IsActive = false
+		isActive := false
+		user.IsActive = &isActive
 		testDB.DB.Save(user)
 
 		// Try to refresh token

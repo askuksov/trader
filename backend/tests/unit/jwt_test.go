@@ -66,7 +66,7 @@ func TestJWTManager_ValidateAccessToken(t *testing.T) {
 
 		_, err := jwtManager.ValidateAccessToken(invalidToken)
 		assert.Error(t, err)
-		assert.ErrorIs(t, err, auth.ErrInvalidToken)
+		assert.ErrorIs(t, err, auth.ErrTokenMalformed)
 	})
 
 	t.Run("should reject malformed token", func(t *testing.T) {
