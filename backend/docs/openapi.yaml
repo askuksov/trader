@@ -1,0 +1,674 @@
+openapi: 3.0.3
+info:
+  title: Trading Bot API
+  description: |
+    Multi-tenant trading bot with Smart DCA (Dollar Cost Averaging) strategy.
+    
+    ## Authentication
+    This API uses JWT Bearer token authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your_access_token>
+    ```
+    
+    ## Security Features
+    - JWT access tokens (15 minutes expiry)
+    - JWT refresh tokens (7 days expiry)
+    - Token blacklisting on logout
+    - Account lockout after failed attempts
+    - Role-based access control (RBAC)
+    - Granular permissions system
+    
+    ## Core Principles
+    - **Never sell at a loss** - LONG positions only
+    - **Smart DCA** - Dollar Cost Averaging with partial sales above average price
+    - **Multi-tenant** - Complete user data isolation
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@tradingbot.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+  - url: https://api.tradingbot.com/v1
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique user identifier
+          example: 123
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "user@example.com"
+        first_name:
+          type: string
+          description: User first name
+          example: "John"
+        last_name:
+          type: string
+          description: User last name
+          example: "Doe"
+        is_active:
+          type: boolean
+          description: Whether the user account is active
+          example: true
+        email_verified:
+          type: boolean
+          description: Whether the email address is verified
+          example: true
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last login timestamp
+          example: "2025-01-15T10:30:00Z"
+        roles:
+          type: array
+          items:
+            type: string
+          description: User roles
+          example: ["trader", "viewer"]
+        permissions:
+          type: array
+          items:
+            type: string
+          description: User permissions
+          example: ["positions:read_own", "api_keys:create"]
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2025-01-01T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2025-01-15T10:30:00Z"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          description: User password
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token (15 minutes expiry)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          description: JWT refresh token (7 days expiry)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expires_in:
+          type: integer
+          description: Access token expiry time in seconds
+          example: 900
+        user:
+          $ref: '#/components/schemas/User'
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          description: Valid refresh token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address for password reset
+          example: "user@example.com"
+
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+          description: Password reset token from email
+          example: "abc123def456"
+        password:
+          type: string
+          minLength: 8
+          description: New password
+          example: "newpassword123"
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: "trader"
+        description:
+          type: string
+          example: "Trading user with position management rights"
+        is_active:
+          type: boolean
+          example: true
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        resource:
+          type: string
+          example: "positions"
+        action:
+          type: string
+          example: "create"
+        description:
+          type: string
+          example: "Create new trading positions"
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+          example: "UNAUTHORIZED"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid email or password"
+        details:
+          type: string
+          description: Additional error details
+          example: "Authentication failed"
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          oneOf:
+            - $ref: '#/components/schemas/User'
+            - $ref: '#/components/schemas/LoginResponse'
+            - type: object
+        message:
+          type: string
+          example: "Operation completed successfully"
+
+    HealthCheck:
+      type: object
+      properties:
+        service:
+          type: string
+          example: "authentication"
+        status:
+          type: string
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: |
+        Authenticate user with email and password.
+        Returns JWT access token and refresh token.
+        
+        **Security Features:**
+        - Account lockout after 5 failed attempts
+        - Timing attack protection
+        - Generic error messages to prevent user enumeration
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "trader@example.com"
+              password: "password123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  expires_in: 900
+                  user:
+                    id: 123
+                    email: "trader@example.com"
+                    first_name: "John"
+                    last_name: "Doe"
+                    is_active: true
+                    roles: ["trader"]
+                    permissions: ["positions:read_own", "api_keys:create"]
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "INVALID_REQUEST"
+                message: "Email and password are required"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "UNAUTHORIZED"
+                message: "Invalid email or password"
+        '403':
+          description: Account locked or inactive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                locked:
+                  value:
+                    code: "ACCOUNT_LOCKED"
+                    message: "Account is temporarily locked due to too many failed login attempts"
+                inactive:
+                  value:
+                    code: "ACCOUNT_INACTIVE"
+                    message: "User account is inactive"
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: |
+        Generate new access token using refresh token.
+        The old refresh token is blacklisted and a new one is issued.
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            example:
+              refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Token refresh successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      summary: User logout
+      description: |
+        Logout user by blacklisting the refresh token.
+        The token will be stored in Redis until its natural expiry.
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '204':
+          description: Logout successful
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      summary: Get current user information
+      description: |
+        Returns information about the currently authenticated user.
+        Requires valid access token.
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 123
+                  email: "trader@example.com"
+                  first_name: "John"
+                  last_name: "Doe"
+                  is_active: true
+                  email_verified: true
+                  roles: ["trader"]
+                  permissions: ["positions:read_own", "api_keys:create"]
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/forgot-password:
+    post:
+      summary: Initiate password reset
+      description: |
+        Send password reset email to user.
+        Always returns success to prevent user enumeration.
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Password reset email sent (if user exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: "If an account with that email exists, a password reset link has been sent"
+
+  /auth/reset-password:
+    post:
+      summary: Complete password reset
+      description: |
+        Reset password using token from email.
+        Token is valid for 1 hour and single use.
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid or expired reset token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/health:
+    get:
+      summary: Authentication service health check
+      description: |
+        Check if authentication service is healthy.
+        Public endpoint for monitoring.
+      tags:
+        - System
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  service: "authentication"
+                  status: "healthy"
+
+  /users:
+    get:
+      summary: List users (Admin only)
+      description: |
+        Get paginated list of all users.
+        Requires `admin:all` permission.
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Items per page
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by email or name
+      responses:
+        '200':
+          description: Users list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                      pagination:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                            example: 1
+                          limit:
+                            type: integer
+                            example: 20
+                          total:
+                            type: integer
+                            example: 150
+                          pages:
+                            type: integer
+                            example: 8
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create user (Admin only)
+      description: |
+        Create a new user account.
+        Requires `admin:all` permission.
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - first_name
+                - last_name
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+                is_active:
+                  type: boolean
+                  default: true
+                roles:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: User Management
+    description: User account management (Admin only)
+  - name: System
+    description: System health and monitoring endpoints
+
+# Security Considerations
+# 1. All endpoints except auth and health require valid JWT token
+# 2. Tokens are signed with RSA256 algorithm
+# 3. Refresh tokens are blacklisted on logout
+# 4. Account lockout after 5 failed login attempts
+# 5. Generic error messages prevent user enumeration
+# 6. Timing attack protection on login endpoint
+# 7. Role-based access control with granular permissions
+# 8. Sensitive fields are never exposed in API responses

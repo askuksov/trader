@@ -1,0 +1,56 @@
+- id: 1
+  resource: "users"
+  action: "create"
+  description: "Create users"
+- id: 2
+  resource: "users"
+  action: "read"
+  description: "Read users"
+- id: 3
+  resource: "users"
+  action: "update"
+  description: "Update users"
+- id: 4
+  resource: "users"
+  action: "delete"
+  description: "Delete users"
+- id: 5
+  resource: "users"
+  action: "read_own"
+  description: "Read own user data"
+- id: 6
+  resource: "users"
+  action: "manage_own"
+  description: "Manage own user data"
+- id: 7
+  resource: "api_keys"
+  action: "create"
+  description: "Create API keys"
+- id: 8
+  resource: "api_keys"
+  action: "read"
+  description: "Read API keys"
+- id: 9
+  resource: "api_keys"
+  action: "read_own"
+  description: "Read own API keys"
+- id: 10
+  resource: "positions"
+  action: "create"
+  description: "Create positions"
+- id: 11
+  resource: "positions"
+  action: "read"
+  description: "Read positions"
+- id: 12
+  resource: "positions"
+  action: "read_own"
+  description: "Read own positions"
+- id: 13
+  resource: "admin"
+  action: "all"
+  description: "All admin permissions"
+- id: 14
+  resource: "system"
+  action: "health_check"
+  description: "System health check"

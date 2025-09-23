@@ -33,6 +33,20 @@ EXPOSE 8080
 # Use Air for live reload in development
 CMD ["air", "-c", ".air.toml"]
 
+# Testing stage
+FROM base AS test
+
+# Add build deps for sqlite & cgo
+RUN apk add --no-cache build-base sqlite-dev
+
+# Copy source code
+COPY . .
+
+# Build with CGO enabled
+RUN CGO_ENABLED=1 GOOS=linux go build -o /bin/user ./cmd/user
+
+CMD ["go", "test", "./..."]
+
 # Production builder stage
 FROM base AS builder
 

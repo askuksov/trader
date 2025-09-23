@@ -278,8 +278,8 @@ test: ## Run all tests
 	@echo "✅ All tests completed!"
 
 test-backend: ## Run backend tests only
-	@echo "🧪 Running backend tests..."
-	cd deployments && docker compose -f docker-compose.dev.yml exec backend go test ./... || echo "⚠️  No tests implemented yet or backend not running"
+	@echo "🧪 Running backend tests with..."
+	cd deployments && docker compose -f docker-compose.dev.yml run --rm backend-test
 
 test-frontend: ## Run frontend tests only
 	@echo "🧪 Running frontend tests..."

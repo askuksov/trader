@@ -28,6 +28,15 @@ services:
     networks:
       - trader-network
 
+  backend-test:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: test
+    volumes:
+      - ../backend:/app
+    command: [ "go", "test", "./..." ]
+
   # Frontend (React)
   frontend:
     build:

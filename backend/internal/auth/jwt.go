@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -87,15 +89,23 @@ func (j *JWTManager) ValidateRefreshToken(tokenString string) (*Claims, error) {
 }
 
 func (j *JWTManager) generateToken(userID uint, email string, permissions []string, tokenType string, expiresAt time.Time, secret string) (string, error) {
+	// Generate unique JWT ID
+	jti, err := generateUniqueID()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate unique ID: %w", err)
+	}
+
+	now := time.Now()
 	claims := &Claims{
 		UserID:      userID,
 		Email:       email,
 		Permissions: permissions,
 		TokenType:   tokenType,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        jti,
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
 			Issuer:    j.cfg.JWT.Issuer,
 			Subject:   fmt.Sprintf("%d", userID),
 		},
@@ -118,6 +128,8 @@ func (j *JWTManager) validateToken(tokenString, secret, expectedType string) (*C
 			return nil, ErrTokenMalformed
 		} else if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrExpiredToken
+		} else if errors.Is(err, jwt.ErrTokenInvalidClaims) {
+			return nil, ErrInvalidToken
 		}
 		return nil, ErrInvalidToken
 	}
@@ -132,4 +144,14 @@ func (j *JWTManager) validateToken(tokenString, secret, expectedType string) (*C
 	}
 
 	return claims, nil
+}
+
+// generateUniqueID generates a random unique identifier for JWT
+func generateUniqueID() (string, error) {
+	bytes := make([]byte, 16) // 128-bit random
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

@@ -1,0 +1,19 @@
+# Admin user has admin role
+- user_id: 1
+  role_id: 1
+
+# Trader user has trader role
+- user_id: 2
+  role_id: 2
+
+# Viewer user has viewer role
+- user_id: 3
+  role_id: 3
+
+# Inactive user has trader role (but user is inactive)
+- user_id: 4
+  role_id: 2
+
+# Locked user has trader role (but user is locked)
+- user_id: 5
+  role_id: 2
