@@ -40,6 +40,11 @@ restart: ## Restart all services
 	$(MAKE) down
 	$(MAKE) up
 
+restart-frontend: ## Restart frontend service only
+	@echo "🔄 Restarting frontend service..."
+	cd deployments && docker compose -f docker-compose.dev.yml restart frontend
+	@echo " ✅ Frontend service restarted!"
+
 # Logging commands
 logs: ## Show logs from all services
 	cd deployments && docker compose -f docker-compose.dev.yml logs -f
