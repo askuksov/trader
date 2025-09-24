@@ -328,6 +328,9 @@ status: ## Show status of all containers
 shell-backend: ## Open shell in backend container
 	cd deployments && docker compose -f docker-compose.dev.yml exec backend sh
 
+shell-frontend: ## Open shell in frontend container
+	cd deployments && docker compose -f docker-compose.dev.yml exec frontend sh
+
 shell-db: ## Open MySQL shell
 	cd deployments && docker compose -f docker-compose.dev.yml exec mysql mysql -u root -prootpassword trader
 

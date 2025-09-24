@@ -6,11 +6,11 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm ci
-
 # Development stage
 FROM base AS development
+
+# Install dependencies
+RUN npm i
 
 # Copy source code
 COPY . .
@@ -23,6 +23,9 @@ CMD ["npm", "start"]
 
 # Production build stage
 FROM base AS build
+
+# Install dependencies
+RUN npm ci
 
 # Copy source code
 COPY . .
