@@ -87,7 +87,7 @@ services:
 
   # Adminer (Database Management UI)
   adminer:
-    image: adminer:4.8.1
+    image: adminer:5.4.0
     container_name: trader-adminer-dev
     ports:
       - "8081:8080"
