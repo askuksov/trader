@@ -3,7 +3,7 @@
 ## Project Overview
 
 **Project Name**: Spot Trading Bot Frontend  
-**Technology Stack**: React 19+, TypeScript, TailwindCSS 4.1, Zustand + Redux, Shadcn/ui, Apache ECharts  
+**Technology Stack**: React 19+, TypeScript, TailwindCSS 4.1, Zustand + Redux, Shadcn/ui, TradingView Lightweight Charts  
 **Target Platform**: Single Page Application (SPA)  
 **Target Users**: Cryptocurrency traders using DCA strategies
 
@@ -19,7 +19,7 @@ Frontend application implementing Smart DCA (Dollar Cost Averaging) trading stra
 - **Framework**: React 19+ with TypeScript strict mode
 - **State Management**: Zustand (UI states) + Redux Toolkit (business logic)
 - **Styling**: TailwindCSS 4.1 + Shadcn/ui component system
-- **Charts**: Apache ECharts via echarts-for-react
+- **Charts**: TradingView Lightweight Charts with React integration
 - **HTTP Client**: RTK Query with automatic caching
 - **Routing**: React Router v6 with lazy loading
 - **Build System**: Vite with code splitting
@@ -169,86 +169,135 @@ AlertDialog, ScrollArea, Separator, Avatar, Skeleton
 
 ---
 
-### TASK-FRONTEND-003: Apache ECharts Integration
+### TASK-FRONTEND-003: TradingView Lightweight Charts Integration
 **Status**: Pending  
 **Assigned**: TBD  
 **Due Date**: TBD  
 **Completion Date**: TBD
 
-**Description**: Integrate Apache ECharts for trading visualizations, create reusable chart components with trading-specific configurations, and ensure responsive behavior across devices.
+**Description**: Integrate TradingView Lightweight Charts for professional trading visualizations, create React wrapper components with TypeScript support, and implement advanced charting features optimized for real-time cryptocurrency data.
 
 **Technical Requirements**:
-- Install echarts and echarts-for-react packages
-- Create typed chart wrapper components for trading data
-- Configure chart themes matching application design system
+- Install lightweight-charts package from TradingView
+- Create React wrapper components following TradingView's react-typescript example
 - Implement responsive chart behavior with automatic resizing
-- Optimize chart performance for real-time data updates
+- Add DCA level markers and take-profit indicators
+- Optimize chart performance for real-time WebSocket data updates
+- Configure professional trading themes matching application design
+
+**Reference Implementation**: https://github.com/tradingview/charting-library-examples/tree/master/react-typescript
 
 **Chart Components**:
 ```typescript
 // shared/ui/charts/
-export interface ChartProps {
-  data: unknown;
+export interface TradingChartProps {
+  data: CandlestickData[] | LineData[];
+  seriesType: 'candlestick' | 'line' | 'area' | 'histogram';
   loading?: boolean;
   height?: number;
   theme?: 'light' | 'dark';
-  responsive?: boolean;
+  markers?: SeriesMarker[];
+  priceLines?: PriceLine[];
+  onCrosshairMove?: (param: MouseEventParams) => void;
+  onTimeRangeMove?: (timeRange: LogicalRange | null) => void;
 }
 
 // Core chart components
-- CandlestickChart: OHLC price data visualization
-- LineChart: Price trends and performance lines  
-- BarChart: Volume and transaction analytics
-- PieChart: Portfolio distribution visualization
-- ScatterChart: Correlation analysis plots
-- Heatmap: Trading pair performance matrix
-- ChartContainer: Base wrapper with common functionality
+- TradingChart: Main candlestick/line chart with volume
+- ComparisonChart: Multi-asset performance comparison
+- PortfolioChart: Portfolio value over time
+- PnLChart: Profit/loss visualization
+- VolumeChart: Trading volume analysis
+- ChartContainer: Base wrapper with TradingView integration
 ```
 
-**Trading Theme Configuration**:
+**TradingView Theme Configuration**:
 ```typescript
-export const tradingChartTheme = {
-  color: [
-    '#26a69a', // Bullish green
-    '#ef5350', // Bearish red  
-    '#42a5f5', // Primary blue
-    '#ab47bc', // Secondary purple
-    '#78909c', // Neutral gray
-    '#ff7043', // Warning orange
-    '#9ccc65', // Success light green
-    '#ffa726'  // Accent amber
-  ],
-  backgroundColor: 'transparent',
-  textStyle: {
-    color: 'hsl(var(--foreground))',
-    fontFamily: 'var(--font-sans)'
+export const lightChartOptions: DeepPartial<ChartOptions> = {
+  layout: {
+    background: { color: '#ffffff' },
+    textColor: '#333333',
   },
   grid: {
-    borderColor: 'hsl(var(--border))',
-    backgroundColor: 'transparent'
+    vertLines: { color: '#f0f0f0' },
+    horzLines: { color: '#f0f0f0' },
   },
-  // Candlestick specific styling
-  series: {
-    candlestick: {
-      itemStyle: {
-        color: '#26a69a',        // Bullish candle
-        color0: '#ef5350',       // Bearish candle
-        borderColor: '#26a69a',  // Bullish border
-        borderColor0: '#ef5350'  // Bearish border
-      }
-    }
-  }
+  crosshair: {
+    mode: CrosshairMode.Normal,
+  },
+  timeScale: {
+    borderColor: '#cccccc',
+    timeVisible: true,
+    secondsVisible: false,
+  },
+};
+
+export const darkChartOptions: DeepPartial<ChartOptions> = {
+  layout: {
+    background: { color: '#1a1a1a' },
+    textColor: '#ffffff',
+  },
+  grid: {
+    vertLines: { color: '#2a2a2a' },
+    horzLines: { color: '#2a2a2a' },
+  },
+  crosshair: {
+    mode: CrosshairMode.Normal,
+  },
+  timeScale: {
+    borderColor: '#555555',
+    timeVisible: true,
+    secondsVisible: false,
+  },
+};
+
+// DCA/TP marker configurations
+export const dcaMarkerStyle = {
+  color: '#26a69a',
+  labelBackgroundColor: '#26a69a',
+  shape: 'arrowDown' as const,
+};
+
+export const takeProfitMarkerStyle = {
+  color: '#ef5350',
+  labelBackgroundColor: '#ef5350', 
+  shape: 'arrowUp' as const,
 };
 ```
 
+**Advanced Features**:
+```typescript
+// Real-time data integration
+interface ChartDataManager {
+  updateCandlestick: (data: CandlestickData) => void;
+  addMarker: (marker: SeriesMarker) => void;
+  setPriceLine: (price: number, color: string, style?: LineStyle) => void;
+  setVisibleRange: (from: number, to: number) => void;
+  takeScreenshot: () => string;
+}
+
+// WebSocket integration
+class RealTimeChartUpdater {
+  private chart: IChartApi;
+  private candlestickSeries: ISeriesApi<'Candlestick'>;
+  
+  updatePrice(price: CandlestickData): void;
+  addDCAMarker(level: number, price: number): void;
+  updateTakeProfitLine(price: number): void;
+}
+```
+
 **Acceptance Criteria**:
-- All chart components render correctly with sample data
-- Charts automatically resize on viewport changes
-- Trading theme applies consistently across all chart types
-- Chart performance handles 1000+ data points smoothly
-- Components are fully typed with proper TypeScript interfaces
-- Charts support both light and dark themes
-- Real-time data updates work without performance degradation
+- TradingView chart renders correctly with candlestick data
+- Chart automatically resizes on viewport changes
+- Real-time price updates work smoothly with WebSocket integration
+- DCA level markers and take-profit lines display accurately
+- Chart performance handles 10,000+ data points without lag
+- Components are fully typed with TradingView TypeScript interfaces
+- Light/dark themes switch seamlessly with application theme
+- Touch gestures work properly on mobile devices
+- Chart data exports correctly for analysis
+- Professional trading indicators and overlays function properly
 
 ---
 
@@ -514,7 +563,7 @@ const validationRules = {
 **Technical Requirements**:
 - Create multi-step form using Zustand for step management
 - Implement real-time parameter calculations and validation
-- Add interactive DCA strategy visualization using ECharts
+- Add interactive DCA strategy visualization using TradingView Lightweight Charts
 - Build trading pair autocomplete with market data integration
 - Include balance checking and fee calculation before confirmation
 
@@ -554,7 +603,7 @@ const validationRules = {
 - stores/useCreatePositionStore.ts:  Wizard state management
 - components/DCALevelsConfig.tsx:    Level configuration sliders
 - components/TakeProfitConfig.tsx:   Take-profit sliders
-- components/StrategyPreview.tsx:    ECharts visualization
+- components/StrategyPreview.tsx:    TradingView chart visualization
 - components/PresetSelector.tsx:     Preset configuration tabs
 - hooks/useMarketData.ts:           Real-time price updates
 - hooks/usePositionCalculations.ts: Parameter calculations
@@ -664,7 +713,7 @@ interface PositionListItem {
 - components/PositionActions.tsx: Management action buttons
 
 // shared/ui/charts/
-- TradingChart.tsx:               ECharts candlestick with overlays
+- TradingChart.tsx:               TradingView candlestick with DCA/TP overlays
 - components/ChartMarkers.tsx:    DCA and TP level indicators
 ```
 
