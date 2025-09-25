@@ -1,27 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import React from 'react';
 
-export default function CreateApiKeyPage() {
+export default function ApiKeysPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Add API Key</h1>
-        <p className="text-muted-foreground">
-          Connect a new exchange API key
-        </p>
-      </div>
-      
-      <div className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>API Key Configuration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-              <span className="text-muted-foreground">API key creation form will be implemented here</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">API Keys</h1>
+      <p className="text-muted-foreground">
+        This page is under construction. The full API Key management interface is being implemented.
+      </p>
     </div>
-  )
+  );
 }

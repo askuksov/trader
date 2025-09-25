@@ -476,9 +476,9 @@ export interface DCALevel {
 ---
 
 ### TASK-FRONTEND-006: API Key Management Interface
-**Status**: Pending  
-**Assigned**: TBD  
-**Due Date**: TBD  
+**Status**: Pending
+**Assigned**: TBD
+**Due Date**: TBD
 **Completion Date**: TBD
 
 **Description**: Implement complete CRUD interface for exchange API key management with secure handling, connection testing, and responsive table/card layouts.
