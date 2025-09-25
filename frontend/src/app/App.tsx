@@ -1,5 +1,5 @@
 import { BrowserRouter } from 'react-router-dom'
-import { ThemeProvider } from './providers/ThemeProvider'
+import { ThemeProvider, ReduxProvider } from './providers'
 import { AppRouter } from './router'
 
 /**
@@ -9,9 +9,11 @@ import { AppRouter } from './router'
 export function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <AppRouter />
-      </ThemeProvider>
+      <ReduxProvider>
+        <ThemeProvider>
+          <AppRouter />
+        </ThemeProvider>
+      </ReduxProvider>
     </BrowserRouter>
   )
 }
