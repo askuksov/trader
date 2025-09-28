@@ -22,10 +22,17 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  console.log('AuthGuard:', { isAuthenticated, loading, requireAuth, pathname: location.pathname });
+  console.log('AuthGuard evaluation:', {
+    isAuthenticated,
+    loading,
+    requireAuth,
+    pathname: location.pathname,
+    redirectTo,
+  });
 
   // Show loading spinner while authentication is being checked
   if (loading) {
+    console.log('AuthGuard: Showing loading state');
     return (
       fallback || (
         <div className="flex items-center justify-center min-h-screen">
@@ -48,12 +55,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   }
 
   // If authentication is not required but user is authenticated (login page)
-  if (!requireAuth && isAuthenticated) {
+  // Only redirect if user is trying to access login page specifically
+  if (!requireAuth && isAuthenticated && location.pathname === '/login') {
     const from = location.state?.from?.pathname || '/';
-    console.log('AuthGuard: User authenticated on public page, redirecting to:', from);
+    console.log('AuthGuard: User authenticated accessing login page, redirecting to:', from);
     return <Navigate to={from} replace />;
   }
 
+  console.log('AuthGuard: Rendering children');
   return <>{children}</>;
 };
 

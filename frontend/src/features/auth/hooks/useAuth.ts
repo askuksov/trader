@@ -5,7 +5,7 @@ import {
   useLoginMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
-  useGetCurrentUserQuery,
+  useLazyGetCurrentUserQuery,
 } from '@/entities/auth';
 import type { LoginCredentials } from '@/entities/auth';
 
@@ -26,11 +26,44 @@ export const useAuth = () => {
   const [loginMutation] = useLoginMutation();
   const [logoutMutation] = useLogoutMutation();
   const [refreshTokenMutation] = useRefreshTokenMutation();
+  const [getCurrentUser] = useLazyGetCurrentUserQuery();
 
-  // Skip user query if not authenticated
-  const { data: currentUser, refetch: refetchUser } = useGetCurrentUserQuery(undefined, {
-    skip: !isAuthenticated,
-  });
+  /**
+   * Refresh access token
+   */
+  const refreshToken = useCallback(async () => {
+    const refreshTokenValue = TokenManager.getRefreshToken();
+    
+    if (!refreshTokenValue) {
+      throw new Error('No refresh token available');
+    }
+    
+    try {
+      const response = await refreshTokenMutation({
+        refresh_token: refreshTokenValue,
+      }).unwrap();
+      
+      // Update tokens - response.data contains the actual token data
+      TokenManager.updateAccessToken(response.data.access_token, response.data.expires_in);
+      
+      // If new refresh token provided, update it too
+      if (response.data.refresh_token) {
+        TokenManager.setTokens(
+          response.data.access_token,
+          response.data.refresh_token,
+          response.data.expires_in
+        );
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      // Clear tokens and reset on refresh failure
+      TokenManager.clearTokens();
+      reset();
+      throw error;
+    }
+  }, [refreshTokenMutation, reset]);
 
   /**
    * Initialize authentication on app start
@@ -45,16 +78,30 @@ export const useAuth = () => {
         const accessToken = TokenManager.getAccessToken();
         
         if (accessToken) {
-          // Try to get current user
-          const result = await refetchUser();
-          
-          if (result.data) {
-            setAuthenticated(true);
-            setUser(result.data);
-          } else {
-            // Token invalid, clear storage
-            TokenManager.clearTokens();
-            reset();
+          try {
+            // Try to get current user
+            const result = await getCurrentUser();
+            
+            if (result.data) {
+              setAuthenticated(true);
+              setUser(result.data);
+              console.log('Auth initialization successful:', result.data);
+            } else if (result.error) {
+              console.log('Auth verification failed:', result.error);
+              // Token invalid, clear storage
+              TokenManager.clearTokens();
+              reset();
+            }
+          } catch (apiError) {
+            console.warn('Auth API call failed:', apiError);
+            // If API is unavailable, try refresh token
+            try {
+              await refreshToken();
+            } catch (refreshError) {
+              console.error('Token refresh also failed:', refreshError);
+              TokenManager.clearTokens();
+              reset();
+            }
           }
         } else {
           // Access token expired, try refresh
@@ -71,7 +118,7 @@ export const useAuth = () => {
     } finally {
       setLoading(false);
     }
-  }, [setLoading, setAuthenticated, setUser, reset, refetchUser]);
+  }, [setLoading, setAuthenticated, setUser, reset, getCurrentUser, refreshToken]);
 
   /**
    * Login with credentials
@@ -125,43 +172,6 @@ export const useAuth = () => {
   }, [logoutMutation, setLoading, reset]);
 
   /**
-   * Refresh access token
-   */
-  const refreshToken = useCallback(async () => {
-    const refreshTokenValue = TokenManager.getRefreshToken();
-    
-    if (!refreshTokenValue) {
-      throw new Error('No refresh token available');
-    }
-    
-    try {
-      const response = await refreshTokenMutation({
-        refresh_token: refreshTokenValue,
-      }).unwrap();
-      
-      // Update tokens - response.data contains the actual token data
-      TokenManager.updateAccessToken(response.data.access_token, response.data.expires_in);
-      
-      // If new refresh token provided, update it too
-      if (response.data.refresh_token) {
-        TokenManager.setTokens(
-          response.data.access_token,
-          response.data.refresh_token,
-          response.data.expires_in
-        );
-      }
-      
-      return response;
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      // Clear tokens and reset on refresh failure
-      TokenManager.clearTokens();
-      reset();
-      throw error;
-    }
-  }, [refreshTokenMutation, reset]);
-
-  /**
    * Check if user has specific role
    */
   const hasRole = useCallback((role: string) => {
@@ -194,13 +204,6 @@ export const useAuth = () => {
       initializeAuth();
     }
   }, []); // Remove dependencies to prevent re-initialization
-
-  // Update user when currentUser changes
-  useEffect(() => {
-    if (currentUser && isAuthenticated) {
-      setUser(currentUser);
-    }
-  }, [currentUser, isAuthenticated, setUser]);
 
   return {
     // State

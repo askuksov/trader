@@ -98,6 +98,27 @@ src/shared/ui/ (form, checkbox)     # New UI components
 - **Memory Management**: Proper cleanup and token refresh scheduling
 - **Bundle Splitting**: Authentication code split from main bundle
 
+### Issues Fixed:
+- **Login Page Redirect Problem (2025-09-28)**:
+  - **Root Cause**: RTK Query `refetchUser()` failed because query was skipped when `isAuthenticated: false`
+  - **Solution**: Replaced `useGetCurrentUserQuery` with `useLazyGetCurrentUserQuery` in authentication initialization
+  - **Fixed**: AuthGuard excessive redirecting when authenticated user tries to access login page
+  - **Fixed**: Authentication initialization error "Cannot refetch a query that has not been started yet"
+  - Modified redirect condition to only trigger for specific `/login` path access
+  - Prevents unwanted logouts when navigating to login while authenticated
+  - User now properly redirects to dashboard when accessing login while logged in
+  - Added comprehensive logging for better debugging
+
+#### Technical Changes:
+- Updated `useAuth.ts` to use `useLazyGetCurrentUserQuery` instead of `useGetCurrentUserQuery`
+- Fixed export of `useLazyGetCurrentUserQuery` from `entities/auth/api/index.ts`
+- Fixed function order to prevent "Cannot access before initialization" error
+- Removed dependency on `isAuthenticated` state for initial query execution
+- Simplified authentication initialization flow with better error handling
+- Enhanced `AuthGuard.tsx` logging for better debugging
+- Fixed query skip logic that caused "refetch" errors
+- Added comprehensive API error handling for unavailable backend
+
 ### Next Steps:
 - TASK-FRONTEND-014: Login Page and Authentication UI (✅ Completed as part of this task)
 - TASK-FRONTEND-015: User Profile Management Interface

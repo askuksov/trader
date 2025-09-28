@@ -1,1 +1,1 @@
-export { authApi, useLoginMutation, useLogoutMutation, useRefreshTokenMutation, useGetCurrentUserQuery, useVerifyTokenMutation } from './authApi';
+export { authApi, useLoginMutation, useLogoutMutation, useRefreshTokenMutation, useGetCurrentUserQuery, useLazyGetCurrentUserQuery, useVerifyTokenMutation } from './authApi';
