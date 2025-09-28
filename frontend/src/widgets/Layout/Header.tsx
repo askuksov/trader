@@ -1,7 +1,8 @@
-import { Menu, User } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { useTheme } from '@/app/providers/ThemeProvider'
 import { Breadcrumb } from './Breadcrumb'
+import { UserMenu } from './components/UserMenu'
 
 interface HeaderProps {
   onMobileMenuClick: () => void
@@ -47,14 +48,7 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
         </Button>
 
         {/* User menu */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <User className="h-5 w-5" />
-          <span className="sr-only">User menu</span>
-        </Button>
+        <UserMenu />
       </div>
     </header>
   )

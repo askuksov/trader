@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppLayout } from '@/widgets/Layout'
 import { ProtectedRoute } from './ProtectedRoute'
+import { AuthGuard } from '@/features/auth'
 import { routes } from './routes'
 import { Spinner } from '@/shared/ui/spinner'
 
@@ -16,6 +17,7 @@ const StrategyPage = lazy(() => import('@/pages/StrategyPage'))
 const AnalyticsPage = lazy(() => import('@/pages/AnalyticsPage'))
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'))
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
+const LoginPage = lazy(() => import('@/pages/LoginPage/LoginPage'))
 
 /**
  * Loading fallback component for lazy-loaded routes
@@ -53,123 +55,138 @@ function NotFoundPage() {
  */
 export function AppRouter() {
   return (
-    <AppLayout>
-      <Suspense fallback={<RouteLoading />}>
-        <Routes>
-          {/* Dashboard Route */}
-          <Route 
-            path={routes.dashboard} 
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            } 
-          />
+    <Suspense fallback={<RouteLoading />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route 
+          path="/login" 
+          element={
+            <AuthGuard requireAuth={false}>
+              <LoginPage />
+            </AuthGuard>
+          } 
+        />
 
-          {/* Positions Routes */}
-          <Route 
-            path={routes.positions.list} 
-            element={
-              <ProtectedRoute>
-                <PositionsPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path={routes.positions.create} 
-            element={
-              <ProtectedRoute>
-                <CreatePositionPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path={routes.positions.detail} 
-            element={
-              <ProtectedRoute>
-                <PositionDetailPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path={routes.positions.edit} 
-            element={
-              <ProtectedRoute>
-                <PositionDetailPage />
-              </ProtectedRoute>
-            } 
-          />
+        {/* Protected Routes with Layout */}
+        <Route path="/*" element={
+          <AppLayout>
+            <Routes>
+              {/* Dashboard Route */}
+              <Route 
+                path={routes.dashboard} 
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* API Keys Routes */}
-          <Route 
-            path={routes.apiKeys.list} 
-            element={
-              <ProtectedRoute>
-                <ApiKeysPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path={routes.apiKeys.create} 
-            element={
-              <ProtectedRoute>
-                <CreateApiKeyPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path={routes.apiKeys.edit} 
-            element={
-              <ProtectedRoute>
-                <CreateApiKeyPage />
-              </ProtectedRoute>
-            } 
-          />
+              {/* Positions Routes */}
+              <Route 
+                path={routes.positions.list} 
+                element={
+                  <ProtectedRoute>
+                    <PositionsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path={routes.positions.create} 
+                element={
+                  <ProtectedRoute>
+                    <CreatePositionPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path={routes.positions.detail} 
+                element={
+                  <ProtectedRoute>
+                    <PositionDetailPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path={routes.positions.edit} 
+                element={
+                  <ProtectedRoute>
+                    <PositionDetailPage />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* Strategy Route */}
-          <Route 
-            path={routes.strategy} 
-            element={
-              <ProtectedRoute>
-                <StrategyPage />
-              </ProtectedRoute>
-            } 
-          />
+              {/* API Keys Routes */}
+              <Route 
+                path={routes.apiKeys.list} 
+                element={
+                  <ProtectedRoute>
+                    <ApiKeysPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path={routes.apiKeys.create} 
+                element={
+                  <ProtectedRoute>
+                    <CreateApiKeyPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path={routes.apiKeys.edit} 
+                element={
+                  <ProtectedRoute>
+                    <CreateApiKeyPage />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* Analytics Route */}
-          <Route 
-            path={routes.analytics} 
-            element={
-              <ProtectedRoute>
-                <AnalyticsPage />
-              </ProtectedRoute>
-            } 
-          />
+              {/* Strategy Route */}
+              <Route 
+                path={routes.strategy} 
+                element={
+                  <ProtectedRoute>
+                    <StrategyPage />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* Notifications Route */}
-          <Route 
-            path={routes.notifications} 
-            element={
-              <ProtectedRoute>
-                <NotificationsPage />
-              </ProtectedRoute>
-            } 
-          />
+              {/* Analytics Route */}
+              <Route 
+                path={routes.analytics} 
+                element={
+                  <ProtectedRoute>
+                    <AnalyticsPage />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* Settings Route */}
-          <Route 
-            path={routes.settings} 
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            } 
-          />
+              {/* Notifications Route */}
+              <Route 
+                path={routes.notifications} 
+                element={
+                  <ProtectedRoute>
+                    <NotificationsPage />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* 404 Fallback Route */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
-    </AppLayout>
+              {/* Settings Route */}
+              <Route 
+                path={routes.settings} 
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* 404 Fallback Route */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </AppLayout>
+        } />
+      </Routes>
+    </Suspense>
   )
 }
